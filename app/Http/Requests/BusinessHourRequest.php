@@ -29,7 +29,7 @@ class BusinessHourRequest extends FormRequest
                 'required',
                 'integer',
                 'between:0,6',
-                Rule::unique('business_hours', 'day_of_week')->ignore($ignoreId),
+                Rule::when($ignoreId !== null, Rule::unique('business_hours', 'day_of_week')->ignore($ignoreId)),
             ],
 
             'open_time' => [

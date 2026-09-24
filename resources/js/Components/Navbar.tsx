@@ -15,7 +15,14 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { route } from 'ziggy-js';
 import NotificationsBell from '@/Components/Notifications/NotificationsBell';
-import { home } from '@/routes';
+import {
+    home,
+    dashboard,
+    appointments,
+    profile,
+    businessHours,
+    logout,
+} from '@/routes';
 import { create as createAppointment } from '@/routes/appointments';
 import {
     services as publicServices,
@@ -67,14 +74,20 @@ export default function Navbar({ navbar }: Props) {
 
     return (
         <nav className="relative z-50">
-            <div className="mx-auto flex w-full items-center justify-between px-6 py-4">
+            <div className="mx-auto flex w-full items-center justify-between gap-2 px-4 py-3 sm:px-6 sm:py-4">
                 <Link
                     href={route('home')}
                     className="text-xl font-bold tracking-tight text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
                     onClick={() => setMobileOpen(false)}
                 >
-                    Crown Barber {user?.role === 'worker' && '- Trabajador'}{' '}
-                    {user?.role === 'admin' && '- Administrador'}
+                    Crown Barber
+                    {user?.role !== 'user' && user && (
+                        <span className="block text-xs font-medium text-black/50 sm:inline sm:pl-2">
+                            {user.role === 'admin'
+                                ? 'Administrador'
+                                : 'Trabajador'}
+                        </span>
+                    )}
                 </Link>
 
                 {/* Links de escritorio */}
@@ -239,7 +252,7 @@ export default function Navbar({ navbar }: Props) {
                 <button
                     type="button"
                     onClick={() => setMobileOpen((v) => !v)}
-                    className="flex items-center justify-center p-2 text-black transition-transform duration-150 active:scale-90 md:hidden"
+                    className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-black md:hidden"
                     aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
                     aria-expanded={mobileOpen}
                 >
@@ -249,7 +262,7 @@ export default function Navbar({ navbar }: Props) {
 
             {/* Panel mobile */}
             {mobileOpen && (
-                <div className="flex flex-col gap-1 border-t border-black/10 bg-white px-6 py-4 md:hidden">
+                <div className="absolute inset-x-0 top-full max-h-[calc(100dvh-80px)] overflow-y-auto overscroll-contain border-t border-black/10 bg-white px-4 py-4 shadow-lg md:hidden">
                     {navbar === 'guest' &&
                         guestLinks.map((link) => (
                             <Link
@@ -274,13 +287,49 @@ export default function Navbar({ navbar }: Props) {
 
                     <div className="mt-4 flex flex-col gap-2 border-t border-black/10 pt-4">
                         {user ? (
-                            <Link
-                                href={route('dashboard')}
-                                onClick={() => setMobileOpen(false)}
-                                className="py-2 text-base font-semibold tracking-tight text-black"
-                            >
-                                Mi Cuenta
-                            </Link>
+                            <>
+                                {[
+                                    { label: 'Mi panel', href: dashboard() },
+                                    {
+                                        label: 'Mis citas',
+                                        href: appointments(),
+                                    },
+                                    ...(user.role === 'user'
+                                        ? [
+                                              {
+                                                  label: 'Agendar cita',
+                                                  href: createAppointment(),
+                                              },
+                                          ]
+                                        : []),
+                                    ...(user.role === 'admin'
+                                        ? [
+                                              {
+                                                  label: 'Horarios de apertura',
+                                                  href: businessHours(),
+                                              },
+                                          ]
+                                        : []),
+                                    { label: 'Mi perfil', href: profile() },
+                                ].map((item) => (
+                                    <Link
+                                        key={item.label}
+                                        href={item.href}
+                                        onClick={() => setMobileOpen(false)}
+                                        className="flex min-h-14 items-center rounded-xl bg-gray-50 px-4 text-lg font-semibold text-black"
+                                    >
+                                        {item.label}
+                                    </Link>
+                                ))}
+                                <Link
+                                    href={logout()}
+                                    as="button"
+                                    onClick={() => setMobileOpen(false)}
+                                    className="flex min-h-14 items-center gap-3 px-4 text-base font-semibold text-red-700"
+                                >
+                                    <LogOut size={20} /> Cerrar sesión
+                                </Link>
+                            </>
                         ) : (
                             <>
                                 <Link

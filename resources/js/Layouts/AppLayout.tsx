@@ -14,7 +14,7 @@ export default function AppLayout({ children, navbar }: Props) {
             <FlashMessages />
             <NotificationRuntime />
             <Navbar navbar={navbar} />
-            <div className="p-8">{children}</div>
+            <main className="px-4 py-6 sm:p-8">{children}</main>
         </>
     );
 }

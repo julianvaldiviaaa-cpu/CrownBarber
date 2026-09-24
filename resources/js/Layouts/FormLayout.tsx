@@ -12,7 +12,9 @@ export default function FormLayout({ children, navbar }: Props) {
         <>
             <FlashMessages />
             <Navbar navbar={navbar} />
-            <div className="mx-auto mt-12 mb-12 max-w-5xl p-2">{children}</div>
+            <main className="mx-auto my-6 max-w-5xl px-4 sm:my-12 sm:px-6">
+                {children}
+            </main>
         </>
     );
 }

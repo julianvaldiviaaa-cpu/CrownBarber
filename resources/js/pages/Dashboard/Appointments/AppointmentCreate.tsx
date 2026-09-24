@@ -1,5 +1,5 @@
 import { Button } from '@heroui/react';
-import { router, useForm } from '@inertiajs/react';
+import { router, useForm, usePoll } from '@inertiajs/react';
 import {
     ChevronLeft,
     ChevronRight,
@@ -7,9 +7,15 @@ import {
     Loader2,
     Scissors,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import FormLayout from '@/Layouts/FormLayout';
-import { cn, formatMoney, formatSlotTime, toISODate } from '@/lib/utils';
+import {
+    cn,
+    formatMoney,
+    formatSlotTime,
+    POLL_INTERVAL_MS,
+    toISODate,
+} from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { availability, store } from '@/routes/appointments';
 import type { BusinessHoursPayload, Service, User } from '@/types';
@@ -59,11 +65,11 @@ export default function AppointmentCreate({
     businessHours,
     selection,
 }: Props) {
+    usePoll(POLL_INTERVAL_MS, { only: ['businessHours'] });
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-    const [slots, setSlots] = useState<string[]>([]);
-    const [loadingSlots, setLoadingSlots] = useState(false);
-    const [workerError, setWorkerError] = useState<string | null>(null);
+    const [retry, setRetry] = useState(0);
+    const heading = useRef<HTMLHeadingElement>(null);
 
     const { data, setData, errors, clearErrors, post, processing } = useForm({
         services: selection.service ? [selection.service] : ([] as number[]),
@@ -113,6 +119,7 @@ export default function AppointmentCreate({
     }, [businessHours]);
 
     const toggleService = (service: Service) => {
+        setData('time', '');
         const isSelected = data.services.includes(service.id);
         setData(
             'services',
@@ -131,127 +138,150 @@ export default function AppointmentCreate({
         setSelectedDate(date);
         setData('date', iso);
         setData('time', '');
-        setSlots([]);
-        setWorkerError(null);
 
         if (errors.date) {
             clearErrors('date');
         }
-
-        loadSlots(iso);
     };
 
     const pickWorker = (workerId: number | string) => {
         setData('worker_id', workerId);
+        setData('time', '');
 
         if (errors.worker_id) {
             clearErrors('worker_id');
         }
-
-        if (selectedDate) {
-            verifyWorkerSlot(toISODate(selectedDate), workerId);
-        }
     };
 
-    const verifyWorkerSlot = async (
-        dateIso: string,
-        workerId: number | string,
-    ) => {
-        setLoadingSlots(true);
+    const slotsUrl =
+        data.date && data.worker_id && data.services.length
+            ? availability.url({
+                  query: {
+                      date: data.date,
+                      worker_id: data.worker_id,
+                      services: data.services,
+                  },
+              })
+            : '';
+    const requestKey = JSON.stringify([slotsUrl, businessHours, retry]);
+    const [result, setResult] = useState<{
+        key: string;
+        slots: string[];
+        error: string | null;
+    } | null>(null);
+    const loadingSlots = Boolean(slotsUrl && result?.key !== requestKey);
+    const slots = result?.key === requestKey ? result.slots : [];
+    const slotError = result?.key === requestKey ? result.error : null;
 
-        try {
-            const response = await fetch(
-                availability.url({
-                    query: {
-                        date: dateIso,
-                        worker_id: workerId,
-                        services: data.services,
-                    },
-                }),
-            );
-            const payload = await response.json();
-            const workerSlots: string[] = payload.slots ?? [];
-
-            if (data.time && !workerSlots.includes(data.time)) {
-                setData('time', '');
-                setWorkerError(
-                    `La hora ${formatSlotTime(data.time)} no está disponible para este barbero. Elige otra hora en el paso anterior.`,
-                );
-            } else {
-                setWorkerError(null);
-            }
-        } catch {
-            setWorkerError(
-                'No se pudo verificar la disponibilidad del barbero.',
-            );
-        } finally {
-            setLoadingSlots(false);
-        }
-    };
-
-    const loadSlots = async (dateIso: string, workerId?: number | string) => {
-        if (data.services.length === 0) {
+    useEffect(() => {
+        if (!slotsUrl) {
             return;
         }
 
-        setLoadingSlots(true);
+        const controller = new AbortController();
+        void fetch(slotsUrl, {
+            signal: controller.signal,
+            headers: { Accept: 'application/json' },
+        })
+            .then(async (response) => {
+                if (!response.ok) {
+                    throw new Error('Error al consultar disponibilidad');
+                }
 
-        try {
-            const params: {
-                date: string;
-                services: number[];
-                worker_id?: number | string;
-            } = {
-                date: dateIso,
-                services: data.services,
-            };
+                const payload = await response.json();
 
-            const id = workerId ?? data.worker_id;
+                if (!Array.isArray(payload.slots)) {
+                    throw new Error('Respuesta inválida');
+                }
 
-            if (id) {
-                params.worker_id = id;
-            }
+                if (!controller.signal.aborted) {
+                    setResult({
+                        key: requestKey,
+                        slots: payload.slots,
+                        error: null,
+                    });
+                }
+            })
+            .catch(() => {
+                if (!controller.signal.aborted) {
+                    setResult({
+                        key: requestKey,
+                        slots: [],
+                        error: 'No pudimos consultar las horas. Revisa tu conexión e inténtalo de nuevo.',
+                    });
+                }
+            });
 
-            const response = await fetch(availability.url({ query: params }));
-            const payload = await response.json();
-            setSlots(payload.slots ?? []);
-        } catch {
-            setSlots([]);
-        } finally {
-            setLoadingSlots(false);
-        }
+        return () => controller.abort();
+    }, [slotsUrl, requestKey]);
+
+    const goToStep = (next: 1 | 2 | 3) => {
+        setStep(next);
+        heading.current?.focus();
+        heading.current?.scrollIntoView({
+            block: 'start',
+            behavior: 'instant',
+        });
     };
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        post(store.url());
+
+        if (step !== 3 || !canSubmit || processing) {
+            return;
+        }
+
+        post(store.url(), {
+            onError: (validation) => {
+                goToStep(
+                    validation.services ? 1 : validation.worker_id ? 2 : 3,
+                );
+                setRetry((value) => value + 1);
+            },
+        });
     };
 
     const canNextFrom1 = data.services.length > 0;
-    const canSubmit = selectedDate && data.time && data.worker_id;
+    const canSubmit =
+        selectedDate &&
+        data.time &&
+        data.worker_id &&
+        !loadingSlots &&
+        !slotError &&
+        slots.includes(data.time);
+    const selectedOverride = businessHours.overrides.find(
+        (item) => item.date === data.date,
+    );
 
     return (
         <FormLayout navbar="dashboard">
             <Button
                 onClick={() => router.get(dashboard.url())}
-                className="mb-10 flex items-center justify-center gap-2 bg-black text-gray-300 transition-all duration-300 hover:gap-4"
+                className="mb-5 flex min-h-12 items-center justify-center gap-2 bg-black text-white"
             >
                 <ChevronLeft /> Dashboard
             </Button>
 
-            <div className="mx-auto w-full max-w-4xl">
-                <h1 className="text-4xl font-bold tracking-tight text-black md:text-5xl">
+            <div className="mx-auto w-full max-w-4xl pb-56 sm:pb-8">
+                <h1
+                    ref={heading}
+                    tabIndex={-1}
+                    className="scroll-mt-6 text-3xl font-bold tracking-tight text-black outline-none md:text-5xl"
+                >
                     Agendar cita
                 </h1>
-                <p className="mt-2 text-sm font-medium tracking-tight text-black/40">
+                <p className="mt-2 text-base font-medium tracking-tight text-black/60">
                     Paso {step} de 3 · {selectedServices.length}{' '}
                     {selectedServices.length === 1 ? 'servicio' : 'servicios'} ·{' '}
                     {formatMoney(totalPrice)} · {totalDuration} min
                 </p>
 
                 {/* Indicador de pasos */}
-                <div className="mt-8 flex items-center gap-2">
-                    {(['Servicios', 'Día y hora', 'Barbero'] as const).map(
+                <nav
+                    aria-label="Pasos para agendar"
+                    className="mt-6 grid grid-cols-3 gap-2"
+                >
+                    {(['Servicios', 'Barbero', 'Día y hora'] as const).map(
                         (label, index) => {
                             const stepNumber = (index + 1) as 1 | 2 | 3;
                             const isActive = step === stepNumber;
@@ -261,17 +291,17 @@ export default function AppointmentCreate({
                                 <button
                                     key={label}
                                     type="button"
-                                    onClick={() => {
-                                        if (stepNumber < step) {
-                                            setStep(stepNumber);
-                                        }
-                                    }}
+                                    aria-current={isActive ? 'step' : undefined}
+                                    onClick={() => goToStep(stepNumber)}
                                     disabled={
-                                        stepNumber > step &&
-                                        !(stepNumber === 2 && canNextFrom1)
+                                        processing ||
+                                        (stepNumber > 1 &&
+                                            (!canNextFrom1 ||
+                                                (stepNumber === 3 &&
+                                                    !data.worker_id)))
                                     }
                                     className={cn(
-                                        'flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold tracking-tight transition-colors',
+                                        'flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-sm font-semibold transition-colors sm:flex-row sm:gap-2 sm:text-base',
                                         isActive && 'bg-black text-white',
                                         isDone &&
                                             'bg-gray-100 text-black/60 hover:bg-gray-200',
@@ -288,7 +318,7 @@ export default function AppointmentCreate({
                             );
                         },
                     )}
-                </div>
+                </nav>
 
                 <form onSubmit={submit} className="mt-10">
                     {/* Paso 1: servicios */}
@@ -304,6 +334,7 @@ export default function AppointmentCreate({
                                         <button
                                             key={service.id}
                                             type="button"
+                                            aria-pressed={selected}
                                             onClick={() =>
                                                 toggleService(service)
                                             }
@@ -330,14 +361,14 @@ export default function AppointmentCreate({
                                                 </span>
                                             </div>
                                             <div>
-                                                <p className="font-bold tracking-tight text-black">
+                                                <p className="text-lg font-bold tracking-tight text-black">
                                                     {service.name}
                                                 </p>
                                                 <p className="mt-0.5 line-clamp-2 text-sm text-black/45">
                                                     {service.description}
                                                 </p>
                                             </div>
-                                            <div className="flex items-center justify-between text-sm">
+                                            <div className="flex items-center justify-between text-base">
                                                 <span className="flex items-center gap-1 text-black/50">
                                                     <Clock size={13} />
                                                     {service.duration} min
@@ -359,13 +390,13 @@ export default function AppointmentCreate({
                     )}
 
                     {/* Paso 2: día y hora */}
-                    {step === 2 && (
+                    {step === 3 && (
                         <div className="flex flex-col gap-8">
                             <div>
-                                <h2 className="text-xs font-semibold tracking-widest text-black/40 uppercase">
+                                <h2 className="text-xl font-bold text-black">
                                     Elige el día
                                 </h2>
-                                <div className="mt-3 flex flex-wrap gap-2">
+                                <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-7">
                                     {openDays.map((date) => {
                                         const selected =
                                             selectedDate?.toDateString() ===
@@ -376,20 +407,25 @@ export default function AppointmentCreate({
                                                 key={date.toISOString()}
                                                 type="button"
                                                 onClick={() => pickDate(date)}
+                                                aria-pressed={selected}
+                                                aria-label={date.toLocaleDateString(
+                                                    'es-MX',
+                                                    { dateStyle: 'full' },
+                                                )}
                                                 className={cn(
-                                                    'flex w-16 flex-col items-center rounded-2xl border px-3 py-3 transition-all duration-150',
+                                                    'flex min-h-24 flex-col items-center justify-center rounded-2xl border-2 px-2 py-3 transition-colors',
                                                     selected
                                                         ? 'border-black bg-black text-white'
                                                         : 'border-gray-200 bg-white text-black hover:border-black',
                                                 )}
                                             >
-                                                <span className="text-[11px] font-medium opacity-60">
+                                                <span className="text-sm font-medium opacity-75">
                                                     {DAY_LABELS[date.getDay()]}
                                                 </span>
-                                                <span className="text-lg font-extrabold tracking-tight">
+                                                <span className="text-2xl font-extrabold tracking-tight">
                                                     {date.getDate()}
                                                 </span>
-                                                <span className="text-[11px] font-medium opacity-60">
+                                                <span className="text-sm font-medium opacity-75">
                                                     {
                                                         MONTH_LABELS[
                                                             date.getMonth()
@@ -407,11 +443,27 @@ export default function AppointmentCreate({
                                 )}
                             </div>
 
-                            <div>
-                                <h2 className="flex items-center gap-2 text-xs font-semibold tracking-widest text-black/40 uppercase">
+                            <div aria-live="polite" aria-busy={loadingSlots}>
+                                <h2 className="flex items-center gap-2 text-xl font-bold text-black">
                                     <Clock size={13} />
                                     Hora disponible
                                 </h2>
+                                {selectedOverride?.open_time &&
+                                    selectedOverride.close_time &&
+                                    !selectedOverride.is_closed && (
+                                        <p className="mt-2 text-base text-black/65">
+                                            Horario especial:{' '}
+                                            {formatSlotTime(
+                                                selectedOverride.open_time,
+                                            )}{' '}
+                                            a{' '}
+                                            {formatSlotTime(
+                                                selectedOverride.close_time,
+                                            )}
+                                            . Tu cita dura {totalDuration}{' '}
+                                            minutos.
+                                        </p>
+                                    )}
 
                                 {loadingSlots ? (
                                     <div className="mt-3 flex items-center gap-2 text-sm text-black/50">
@@ -421,12 +473,31 @@ export default function AppointmentCreate({
                                         />
                                         Consultando disponibilidad…
                                     </div>
+                                ) : slotError ? (
+                                    <div
+                                        role="alert"
+                                        className="mt-3 rounded-2xl bg-amber-50 p-4 text-base"
+                                    >
+                                        <p>{slotError}</p>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setRetry((value) => value + 1)
+                                            }
+                                            className="mt-2 min-h-12 font-bold underline"
+                                        >
+                                            Volver a intentar
+                                        </button>
+                                    </div>
                                 ) : slots.length > 0 ? (
-                                    <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-7">
+                                    <div className="mt-3 grid grid-cols-2 gap-3 min-[380px]:grid-cols-3 sm:grid-cols-4">
                                         {slots.map((slot) => (
                                             <button
                                                 key={slot}
                                                 type="button"
+                                                aria-pressed={
+                                                    data.time === slot
+                                                }
                                                 onClick={() => {
                                                     setData('time', slot);
 
@@ -435,7 +506,7 @@ export default function AppointmentCreate({
                                                     }
                                                 }}
                                                 className={cn(
-                                                    'rounded-lg border px-3 py-2.5 text-sm font-semibold tracking-tight transition-colors duration-150',
+                                                    'min-h-14 rounded-xl border-2 px-2 py-3 text-base font-semibold transition-colors',
                                                     data.time === slot
                                                         ? 'border-black bg-black text-white'
                                                         : 'border-gray-200 text-black/60 hover:border-black hover:text-black',
@@ -446,9 +517,9 @@ export default function AppointmentCreate({
                                         ))}
                                     </div>
                                 ) : (
-                                    <p className="mt-3 text-sm text-black/40">
+                                    <p className="mt-3 rounded-2xl bg-gray-100 p-4 text-base text-black/65">
                                         {selectedDate
-                                            ? 'No hay horas disponibles para ese día.'
+                                            ? `No quedan horas para ${totalDuration} minutos con este barbero. Prueba otro día o cambia de barbero.`
                                             : 'Elige primero un día.'}
                                     </p>
                                 )}
@@ -457,14 +528,25 @@ export default function AppointmentCreate({
                                         {errors.time}
                                     </p>
                                 )}
+                                {data.time &&
+                                    !loadingSlots &&
+                                    !slots.includes(data.time) && (
+                                        <p
+                                            role="alert"
+                                            className="mt-3 text-base text-amber-800"
+                                        >
+                                            La hora elegida ya no está
+                                            disponible. Selecciona otra.
+                                        </p>
+                                    )}
                             </div>
                         </div>
                     )}
 
                     {/* Paso 3: barbero */}
-                    {step === 3 && (
+                    {step === 2 && (
                         <div>
-                            <h2 className="text-xs font-semibold tracking-widest text-black/40 uppercase">
+                            <h2 className="text-xl font-bold text-black">
                                 Elige tu barbero
                             </h2>
                             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -476,6 +558,7 @@ export default function AppointmentCreate({
                                         <button
                                             key={worker.id}
                                             type="button"
+                                            aria-pressed={selected}
                                             onClick={() =>
                                                 pickWorker(worker.id)
                                             }
@@ -515,20 +598,15 @@ export default function AppointmentCreate({
                                     {errors.worker_id}
                                 </p>
                             )}
-                            {workerError && (
-                                <p className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                                    {workerError}
-                                </p>
-                            )}
                         </div>
                     )}
 
                     {/* Resumen + navegación */}
-                    <div className="mt-10 rounded-2xl border border-gray-200 bg-white p-6">
+                    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-lg sm:sticky sm:bottom-4 sm:mt-10 sm:rounded-2xl sm:border sm:p-5">
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                            <div className="text-sm text-black/60">
+                            <div className="min-w-0 text-sm text-black/65">
                                 {selectedServices.length > 0 && (
-                                    <p>
+                                    <p className="line-clamp-2">
                                         {selectedServices
                                             .map((s) => s.name)
                                             .join(' + ')}{' '}
@@ -579,9 +657,10 @@ export default function AppointmentCreate({
                                     <button
                                         type="button"
                                         onClick={() =>
-                                            setStep((s) => (s - 1) as 1 | 2 | 3)
+                                            goToStep((step - 1) as 1 | 2 | 3)
                                         }
-                                        className="flex items-center gap-1.5 rounded-full border border-gray-200 px-5 py-2.5 text-sm font-semibold tracking-tight text-black/60 transition-colors hover:border-black hover:text-black"
+                                        disabled={processing}
+                                        className="flex min-h-14 items-center justify-center gap-1 rounded-xl border border-gray-300 px-4 text-base font-semibold text-black"
                                     >
                                         <ChevronLeft size={15} />
                                         Atrás
@@ -595,15 +674,17 @@ export default function AppointmentCreate({
                                             step === 1
                                                 ? !canNextFrom1
                                                 : step === 2
-                                                  ? !(selectedDate && data.time)
+                                                  ? !data.worker_id
                                                   : false
                                         }
                                         onClick={() =>
-                                            setStep((s) => (s + 1) as 1 | 2 | 3)
+                                            goToStep((step + 1) as 1 | 2 | 3)
                                         }
-                                        className="flex items-center gap-1.5 rounded-full bg-black px-6 py-2.5 text-sm font-semibold tracking-tight text-white transition-transform active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
+                                        className="flex min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-black px-4 text-base font-bold text-white disabled:opacity-40"
                                     >
-                                        Continuar
+                                        {step === 1
+                                            ? 'Elegir barbero'
+                                            : 'Elegir día y hora'}
                                         <ChevronRight size={15} />
                                     </button>
                                 )}
@@ -612,7 +693,7 @@ export default function AppointmentCreate({
                                     <button
                                         type="submit"
                                         disabled={processing || !canSubmit}
-                                        className="flex items-center gap-1.5 rounded-full bg-black px-6 py-2.5 text-sm font-semibold tracking-tight text-white transition-transform active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
+                                        className="flex min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-black px-4 text-base font-bold text-white disabled:opacity-40"
                                     >
                                         {processing
                                             ? 'Agendando…'

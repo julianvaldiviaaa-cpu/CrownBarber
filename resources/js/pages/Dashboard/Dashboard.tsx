@@ -20,7 +20,7 @@ export default function Dashboard({ stats, appointments }: Props) {
     return (
         <AppLayout navbar="dashboard">
             <div className="mx-auto max-w-6xl">
-                <h1 className="text-5xl tracking-[-.2rem] md:text-7xl">
+                <h1 className="text-3xl tracking-tight sm:text-5xl md:text-7xl">
                     Hola, <span className="font-medium">{user?.name}</span>
                 </h1>
 

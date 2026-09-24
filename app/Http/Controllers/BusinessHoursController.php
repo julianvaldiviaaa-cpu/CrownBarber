@@ -6,6 +6,8 @@ use App\Http\Requests\BusinessHourOverrideRequest;
 use App\Http\Requests\BusinessHourRequest;
 use App\Models\BusinessHour;
 use App\Models\BusinessHourOverride;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Inertia\Inertia;
 
@@ -28,9 +30,9 @@ class BusinessHoursController extends Controller
      * Crea o actualiza el horario de un día de la semana.
      */
     #[Authorize('create', BusinessHour::class)]
-    public function store(BusinessHourRequest $request)
+    public function store(BusinessHourRequest $request): JsonResponse|RedirectResponse
     {
-        BusinessHour::updateOrCreate(
+        $hour = BusinessHour::updateOrCreate(
             ['day_of_week' => $request->input('day_of_week')],
             [
                 'open_time' => $request->input('open_time'),
@@ -39,6 +41,10 @@ class BusinessHoursController extends Controller
             ],
         );
 
+        if ($request->expectsJson()) {
+            return response()->json($hour);
+        }
+
         return back()->with('success', 'Horario guardado correctamente.');
     }
 
@@ -46,13 +52,17 @@ class BusinessHoursController extends Controller
      * Actualiza un horario semanal existente.
      */
     #[Authorize('update', 'businessHour')]
-    public function update(BusinessHourRequest $request, BusinessHour $businessHour)
+    public function update(BusinessHourRequest $request, BusinessHour $businessHour): JsonResponse|RedirectResponse
     {
         $businessHour->update([
             'open_time' => $request->input('open_time'),
             'close_time' => $request->input('close_time'),
             'active' => $request->boolean('active', true),
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json($businessHour);
+        }
 
         return back()->with('success', 'Horario actualizado correctamente.');
     }
@@ -83,9 +93,13 @@ class BusinessHoursController extends Controller
      * Actualiza una excepción.
      */
     #[Authorize('updateOverride', 'override')]
-    public function updateOverride(BusinessHourOverrideRequest $request, BusinessHourOverride $override)
+    public function updateOverride(BusinessHourOverrideRequest $request, BusinessHourOverride $override): JsonResponse|RedirectResponse
     {
         $override->update($request->validated());
+
+        if ($request->expectsJson()) {
+            return response()->json($override);
+        }
 
         return back()->with('success', 'Excepción de horario actualizada.');
     }

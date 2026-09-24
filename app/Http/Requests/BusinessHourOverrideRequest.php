@@ -27,7 +27,7 @@ class BusinessHourOverrideRequest extends FormRequest
         return [
             'date' => [
                 'required',
-                'date',
+                'date_format:Y-m-d',
                 Rule::unique('business_hour_overrides', 'date')->ignore($ignoreId),
             ],
 
@@ -38,13 +38,13 @@ class BusinessHourOverrideRequest extends FormRequest
 
             'open_time' => [
                 'nullable',
-                'required_without:is_closed',
+                Rule::requiredIf(! $this->boolean('is_closed')),
                 'date_format:H:i',
             ],
 
             'close_time' => [
                 'nullable',
-                'required_without:is_closed',
+                Rule::requiredIf(! $this->boolean('is_closed')),
                 'date_format:H:i',
                 'after:open_time',
             ],
@@ -79,8 +79,8 @@ class BusinessHourOverrideRequest extends FormRequest
             'open_time.date_format' => 'La hora de apertura no es válida.',
             'close_time.date_format' => 'La hora de cierre no es válida.',
             'close_time.after' => 'La hora de cierre debe ser posterior a la de apertura.',
-            'open_time.required_without' => 'Si no es un día cerrado, define la hora de apertura.',
-            'close_time.required_without' => 'Si no es un día cerrado, define la hora de cierre.',
+            'open_time.required' => 'Si no es un día cerrado, define la hora de apertura.',
+            'close_time.required' => 'Si no es un día cerrado, define la hora de cierre.',
         ];
     }
 }

@@ -14,20 +14,28 @@ export default defineConfig({
                 'resources/css/crown.css',
                 'resources/js/app.tsx',
             ],
+
             refresh: true,
+
+            detectTls: false,
+
             fonts: [
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
                 }),
             ],
         }),
+
         inertia(),
+
         react({
             babel: {
                 plugins: ['babel-plugin-react-compiler'],
             },
         }),
+
         tailwindcss(),
+
         wayfinder({
             formVariants: true,
         }),
