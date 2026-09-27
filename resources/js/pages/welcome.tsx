@@ -8,6 +8,7 @@ import {
 } from '@/Components/PublicSections';
 import type { PublicBarber, PublicService } from '@/Components/PublicSections';
 import PublicLayout, { BookingLink } from '@/Layouts/PublicLayout';
+import { useTranslation } from '@/lib/i18n';
 import { experience, services as servicesRoute } from '@/routes/public';
 
 export default function Welcome({
@@ -17,12 +18,16 @@ export default function Welcome({
     services: PublicService[];
     barbers: PublicBarber[];
 }) {
+    const { t } = useTranslation();
+
     return (
         <PublicLayout>
-            <Head title="Crown Barber · El arte de llevar tu estilo">
+            <Head title={t('Crown Barber · El arte de llevar tu estilo')}>
                 <meta
                     name="description"
-                    content="El oficio de la barbería, elevado al detalle. Descubre Crown Barber, conoce a nuestro equipo y reserva un momento para ti."
+                    content={t(
+                        'El oficio de la barbería, elevado al detalle. Descubre Crown Barber, conoce a nuestro equipo y reserva un momento para ti.',
+                    )}
                 />
             </Head>
 
@@ -31,7 +36,9 @@ export default function Welcome({
                     <img
                         className="crown-cinematic-photo"
                         src="/crown-barber-studio.jpg"
-                        alt="Un barbero perfila cuidadosamente la barba de un cliente"
+                        alt={t(
+                            'Un barbero perfila cuidadosamente la barba de un cliente',
+                        )}
                         width="1400"
                         height="933"
                         fetchPriority="high"
@@ -40,29 +47,25 @@ export default function Welcome({
                 <div className="crown-cinematic-shade" />
                 <div className="crown-container crown-cinematic-content">
                     <div className="crown-cinematic-topline">
-                        <p className="crown-eyebrow">
-                            <span className="crown-dot" /> BARBERÍA
-                            CONTEMPORÁNEA
-                        </p>
                         <span className="crown-edition">
-                            EL OFICIO. EL DETALLE. TÚ.
+                            {t('EL OFICIO. EL DETALLE. TÚ.')}{' '}
                         </span>
                     </div>
                     <h1 id="hero-title" className="crown-cinematic-title">
-                        <span data-split-intro>El arte de</span>
-                        <em data-split-intro>llevar tu estilo.</em>
+                        <span data-split-intro>{t('El arte de')}</span>
+                        <em data-split-intro>{t('llevar tu estilo.')}</em>
                     </h1>
                     <div className="crown-cinematic-bottom">
                         <div className="crown-cinematic-description">
                             <p>
-                                Más que un corte. Un ritual personal.
+                                {t('Más que un corte. Un ritual personal.')}{' '}
                                 <br />
-                                Un momento para volver a ti.
+                                {t('Un momento para volver a ti.')}{' '}
                             </p>
                             <BookingLink className="crown-button crown-button-brass" />
                         </div>
                         <a className="crown-scroll-cue" href="#descubre">
-                            <span>DESLIZA PARA DESCUBRIR</span>
+                            <span>{t('DESLIZA PARA DESCUBRIR')}</span>
                             <ArrowDown size={18} aria-hidden="true" />
                         </a>
                     </div>
@@ -79,7 +82,9 @@ export default function Welcome({
             >
                 <div className="crown-container crown-ritual-stage">
                     <div className="crown-ritual-heading">
-                        <p className="crown-eyebrow">LA FILOSOFÍA CROWN</p>
+                        <p className="crown-eyebrow">
+                            {t('LA FILOSOFÍA CROWN')}
+                        </p>
                         <span
                             className="crown-ritual-emblem"
                             aria-hidden="true"
@@ -92,20 +97,25 @@ export default function Welcome({
                         className="crown-ritual-statement"
                         data-split-scrub
                     >
-                        El verdadero estilo no necesita llamar la atención. Se
-                        reconoce en cada detalle.
+                        {t(
+                            'El verdadero estilo no necesita llamar la atención. Se reconoce en cada detalle.',
+                        )}{' '}
                     </h2>
                     <div className="crown-ritual-foot">
-                        <span>PRECISIÓN EN EL CORTE.</span>
-                        <span>PERSONALIDAD EN EL RESULTADO.</span>
+                        <span>{t('PRECISIÓN EN EL CORTE.')}</span>
+                        <span>{t('PERSONALIDAD EN EL RESULTADO.')}</span>
                     </div>
                     <div className="crown-ritual-line" aria-hidden="true" />
                 </div>
             </section>
 
             <div className="crown-catalog-intro crown-container">
-                <p className="crown-eyebrow">ELIGE CÓMO QUIERES SENTIRTE</p>
-                <span className="crown-edition">CROWN BARBER / SERVICIOS</span>
+                <p className="crown-eyebrow">
+                    {t('ELIGE CÓMO QUIERES SENTIRTE')}
+                </p>
+                <span className="crown-edition">
+                    {t('CROWN BARBER / SERVICIOS')}
+                </span>
             </div>
             <ServiceList services={services} preview />
 
@@ -114,38 +124,39 @@ export default function Welcome({
                     <div className="crown-atelier-art" aria-hidden="true">
                         <div className="crown-atelier-frame">
                             <Crown size={74} strokeWidth={0.65} />
-                            <span className="crown-atelier-monogram">Cb.</span>
+                            <span className="crown-atelier-monogram">CB.</span>
                             <span className="crown-eyebrow">
-                                DEDICADOS AL DETALLE
+                                {t('DEDICADOS AL DETALLE')}{' '}
                             </span>
                         </div>
                         <span className="crown-atelier-caption">
-                            UN OFICIO QUE SE SIENTE.
+                            {t('UN OFICIO QUE SE SIENTE.')}{' '}
                         </span>
                     </div>
                     <div className="crown-story-copy">
-                        <p className="crown-eyebrow">02 / LA EXPERIENCIA</p>
+                        <p className="crown-eyebrow">
+                            {t('02 / LA EXPERIENCIA')}
+                        </p>
                         <h2 className="crown-display">
-                            El tiempo se detiene.
-                            <br />
-                            <em>Tu estilo, no.</em>
+                            {t('El tiempo se detiene.')} <br />
+                            <em>{t('Tu estilo, no.')}</em>
                         </h2>
                         <Reveal>
                             <p className="crown-copy">
-                                La silla, la conversación, el sonido de las
-                                tijeras. Hay momentos que merecen disfrutarse
-                                sin prisa.
+                                {t(
+                                    'La silla, la conversación, el sonido de las tijeras. Hay momentos que merecen disfrutarse sin prisa.',
+                                )}{' '}
                             </p>
                             <p className="crown-copy">
-                                Nos gusta escuchar lo que buscas y cuidar lo que
-                                hace único a tu estilo. Del primer trazo al
-                                último detalle.
+                                {t(
+                                    'Nos gusta escuchar lo que buscas y cuidar lo que hace único a tu estilo. Del primer trazo al último detalle.',
+                                )}{' '}
                             </p>
                             <Link
                                 className="crown-text-link"
                                 href={experience()}
                             >
-                                Descubre la experiencia{' '}
+                                {t('Descubre la experiencia')}{' '}
                                 <ArrowUpRight size={18} />
                             </Link>
                         </Reveal>
@@ -158,25 +169,26 @@ export default function Welcome({
             <section
                 className="crown-detail-banner"
                 data-parallax
-                aria-label="El cuidado del detalle"
+                aria-label={t('El cuidado del detalle')}
             >
                 <img
                     src="/crown-barber-studio.jpg"
-                    alt="Detalle del trabajo a tijera en el cuidado de la barba"
+                    alt={t(
+                        'Detalle del trabajo a tijera en el cuidado de la barba',
+                    )}
                     width="1400"
                     height="933"
                     loading="lazy"
                 />
                 <div className="crown-detail-shade" />
                 <div className="crown-container crown-detail-caption">
-                    <span className="crown-eyebrow">LA FIRMA CROWN</span>
+                    <span className="crown-eyebrow">{t('LA FIRMA CROWN')}</span>
                     <p>
-                        Se ve bien.
-                        <br />
-                        <em>Se siente mejor.</em>
+                        {t('Se ve bien.')} <br />
+                        <em>{t('Se siente mejor.')}</em>
                     </p>
                     <Link href={servicesRoute()} className="crown-text-link">
-                        Encuentra tu servicio <ArrowUpRight size={18} />
+                        {t('Encuentra tu servicio')} <ArrowUpRight size={18} />
                     </Link>
                 </div>
             </section>
@@ -186,16 +198,15 @@ export default function Welcome({
                     <div className="crown-section-heading">
                         <div>
                             <p className="crown-eyebrow">
-                                04 / TU PRÓXIMA VISITA
+                                {t('04 / TU PRÓXIMA VISITA')}{' '}
                             </p>
                             <h2 className="crown-display">
-                                Un momento para ti.
-                                <br />
-                                <em>Así de sencillo.</em>
+                                {t('Un momento para ti.')} <br />
+                                <em>{t('Así de sencillo.')}</em>
                             </h2>
                         </div>
                         <Link className="crown-text-link" href={experience()}>
-                            Cómo funciona <ArrowUpRight size={18} />
+                            {t('Cómo funciona')} <ArrowUpRight size={18} />
                         </Link>
                     </div>
                     <Steps />

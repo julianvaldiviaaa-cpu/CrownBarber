@@ -8,6 +8,7 @@ enum AppointmentStatus: string
     case Proposed = 'proposed';
     case Confirmed = 'confirmed';
     case Cancelled = 'cancelled';
+    case Completed = 'completed';
 
     /**
      * @return array<int, string>

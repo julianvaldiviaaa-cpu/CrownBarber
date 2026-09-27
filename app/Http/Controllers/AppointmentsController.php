@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\AppointmentStatus;
+use App\Http\Requests\CompleteAppointmentRequest;
 use App\Http\Requests\FilterAppointmentsRequest;
 use App\Http\Requests\ProposeAppointmentRequest;
 use App\Http\Requests\StoreAppointmentRequest;
@@ -16,7 +17,9 @@ use App\Notifications\AppointmentConfirmed;
 use App\Notifications\AppointmentTimeProposed;
 use App\Notifications\NewAppointmentRequest;
 use App\Services\BusinessHoursService;
+use App\Services\LoyaltyService;
 use App\UserRoles;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Attributes\Controllers\Authorize;
 use Illuminate\Support\Carbon;
@@ -27,6 +30,16 @@ use Inertia\Response;
 
 class AppointmentsController extends Controller
 {
+    public function __construct(private LoyaltyService $loyalty) {}
+
+    public function complete(CompleteAppointmentRequest $request, Appointment $appointment): RedirectResponse
+    {
+        $reward = $request->validated('loyalty_reward_service_id');
+        $this->loyalty->complete($appointment, $request->user(), $reward === null ? null : (int) $reward);
+
+        return back()->with('success', 'Visita completada. La tarjeta de fidelidad se actualizó correctamente.');
+    }
+
     /**
      * Lista de citas según el rol: el cliente ve las suyas,
      * el barbero (worker/admin) las que le fueron asignadas.
@@ -34,6 +47,7 @@ class AppointmentsController extends Controller
     public function index(FilterAppointmentsRequest $request): Response
     {
         $user = $request->user();
+        $this->loyalty->synchronize($user);
         $filters = $request->filters();
 
         $appointments = Appointment::query()
@@ -64,7 +78,8 @@ class AppointmentsController extends Controller
 
         return Inertia::render('Dashboard/Appointments/AppointmentCreate', [
             'services' => $services,
-            'workers' => $workers,
+            'loyalty' => $this->loyalty->summary($request->user()),
+            'workers' => $workers->map(fn (User $worker): array => $worker->publicWorkerProfile())->values()->all(),
             'selection' => [
                 'service' => $services->firstWhere('id', $request->integer('service'))?->id,
                 'barber' => $workers->firstWhere('id', $request->integer('barber'))?->id,
@@ -81,7 +96,7 @@ class AppointmentsController extends Controller
         $data = $request->validate([
             'date' => ['required', 'date_format:Y-m-d'],
             'worker_id' => ['sometimes', 'integer', Rule::exists('users', 'id')
-                ->whereIn('role', [UserRoles::Worker->value, UserRoles::Admin->value])->withoutTrashed()],
+                ->where('role', UserRoles::Worker->value)->withoutTrashed()],
             'services' => ['required', 'array', 'min:1'],
             'services.*' => ['integer', 'distinct', 'exists:services,id'],
         ]);
@@ -146,6 +161,8 @@ class AppointmentsController extends Controller
     #[Authorize('view', 'appointment')]
     public function show(Appointment $appointment)
     {
+        $loyalty = $this->loyalty->summary($appointment->user);
+        $appointment->refresh();
         $appointment->load([
             'user:id,name,phone,email',
             'worker:id,name,phone',
@@ -156,6 +173,8 @@ class AppointmentsController extends Controller
 
         return Inertia::render('Dashboard/Appointments/AppointmentShow', [
             'appointment' => $appointment,
+            'loyalty' => $loyalty,
+            'canComplete' => request()->user()->can('complete', $appointment),
             'businessHours' => $this->businessHoursPayload(),
         ]);
     }
@@ -243,15 +262,15 @@ class AppointmentsController extends Controller
     }
 
     /**
-     * Barberos = usuarios con rol worker o admin.
+     * Barberos disponibles para reservar = usuarios con rol worker.
      *
      * @return Collection<int, User>
      */
     protected function availableWorkers(): Collection
     {
-        return User::whereIn('role', [UserRoles::Worker->value, UserRoles::Admin->value])
+        return User::where('role', UserRoles::Worker->value)
             ->orderBy('name')
-            ->get(['id', 'name', 'role']);
+            ->get();
     }
 
     /**

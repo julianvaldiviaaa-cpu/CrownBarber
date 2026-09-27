@@ -20,3 +20,7 @@ input:-webkit-autofill:focus {
     /* evita el "flash" del color nativo */
     caret-color: white;
 }
+
+::-webkit-scrollbar {
+    display: none;
+}

@@ -1,24 +1,22 @@
-import {
-    FieldError,
-    Form,
-    Input,
-    Label,
-    TextField,
-    Button,
-} from '@heroui/react';
+import { FieldError, Form, Label, TextField } from '@heroui/react';
 import { useForm, router } from '@inertiajs/react';
 import { ChevronLeft } from 'lucide-react';
 import type { SyntheticEvent } from 'react';
 import { route } from 'ziggy-js';
+import { Button, Input, NativeButton, Textarea } from '@/Components/Watermelon';
 import FormLayout from '@/Layouts/FormLayout';
+import { useTranslation } from '@/lib/i18n';
 
 export default function ServiceCreate() {
+    const { t } = useTranslation();
+
     const { data, setData, errors, clearErrors, post, processing, reset } =
         useForm({
             name: '',
             description: '',
             price: 0,
             duration: 0,
+            loyalty_reward_type: '',
         });
 
     const handleSubmit = (e: SyntheticEvent) => {
@@ -37,21 +35,59 @@ export default function ServiceCreate() {
                 onClick={() => router.get(route('dashboard'))}
                 className="mb-10 flex items-center justify-center gap-2 bg-black text-gray-300 transition-all duration-300 hover:gap-4"
             >
-                <ChevronLeft /> Dashboard
+                <ChevronLeft /> {t('Dashboard')}{' '}
             </Button>
             <Form
                 onSubmit={handleSubmit}
                 className="mx-auto flex w-full max-w-3xl flex-col items-center rounded-3xl bg-black px-6 py-12 md:px-12 md:py-20"
             >
                 <h2 className="text-center text-4xl font-medium tracking-[-0.02em] text-white capitalize md:text-5xl">
-                    Crear Servicio
+                    {t('Crear Servicio')}{' '}
                 </h2>
                 <p className="mx-auto my-6 max-w-sm text-center text-base/6 tracking-tight text-white/60">
-                    Llena el siguiente formulario para crear un servicio que
-                    podrás ofrecer a tus clientes
+                    {t(
+                        'Llena el siguiente formulario para crear un servicio que podrás ofrecer a tus clientes',
+                    )}{' '}
                 </p>
 
                 <div className="mt-6 grid w-full grid-cols-1 gap-6 md:grid-cols-2">
+                    <div className="col-span-full flex flex-col gap-2 text-white/80">
+                        <label
+                            htmlFor="loyalty_reward_type"
+                            className="text-sm font-medium"
+                        >
+                            {t('Premio de fidelidad')}{' '}
+                        </label>
+                        <select
+                            id="loyalty_reward_type"
+                            value={data.loyalty_reward_type}
+                            onChange={(event) =>
+                                setData(
+                                    'loyalty_reward_type',
+                                    event.target.value,
+                                )
+                            }
+                            className="wm-input min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-black"
+                        >
+                            <option value="">
+                                {t('No participa como premio')}
+                            </option>
+                            <option value="haircut">
+                                {t('Corte de cabello gratis')}{' '}
+                            </option>
+                            <option value="facial">{t('Facial gratis')}</option>
+                        </select>
+                        <p className="text-xs opacity-60">
+                            {t(
+                                'Habilita cortes de cabello o faciales. Se descuenta un servicio al canjear la tarjeta.',
+                            )}{' '}
+                        </p>
+                        {errors.loyalty_reward_type && (
+                            <p role="alert" className="text-sm text-red-500">
+                                {t(errors.loyalty_reward_type)}
+                            </p>
+                        )}
+                    </div>
                     <TextField
                         isRequired
                         name="name"
@@ -68,14 +104,14 @@ export default function ServiceCreate() {
                         className="col-span-1 md:col-span-2"
                     >
                         <Label className="text-sm font-medium tracking-tight text-white/80">
-                            Nombre del Servicio
+                            {t('Nombre del Servicio')}{' '}
                         </Label>
                         <Input
-                            placeholder="Ej. Corte Clásico"
+                            placeholder={t('Ej. Corte Clásico')}
                             className="w-full rounded-lg bg-white/5 px-4 py-3 text-white transition-colors duration-150 outline-none placeholder:text-white/30 focus:ring-2 focus:ring-amber-500"
                         />
                         <FieldError className="text-sm font-medium text-red-500">
-                            {errors.name}
+                            {t(errors.name)}
                         </FieldError>
                     </TextField>
 
@@ -84,9 +120,9 @@ export default function ServiceCreate() {
                             htmlFor="description"
                             className="text-sm font-medium tracking-tight text-white/80"
                         >
-                            Descripción
+                            {t('Descripción')}{' '}
                         </label>
-                        <textarea
+                        <Textarea
                             id="description"
                             name="description"
                             rows={4}
@@ -98,12 +134,14 @@ export default function ServiceCreate() {
                                     clearErrors('description');
                                 }
                             }}
-                            placeholder="Describe en qué consiste el servicio"
+                            placeholder={t(
+                                'Describe en qué consiste el servicio',
+                            )}
                             className="w-full resize-none rounded-lg bg-white/5 px-4 py-3 text-white transition-colors duration-150 outline-none placeholder:text-white/30 focus:ring-2 focus:ring-amber-500"
                         />
                         {errors.description && (
                             <p className="text-sm font-medium text-red-500">
-                                {errors.description}
+                                {t(errors.description)}
                             </p>
                         )}
                     </div>
@@ -123,7 +161,7 @@ export default function ServiceCreate() {
                         isInvalid={!!errors.price}
                     >
                         <Label className="text-sm font-medium tracking-tight text-white/80">
-                            Precio
+                            {t('Precio')}{' '}
                         </Label>
                         <div className="relative">
                             <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-white/40">
@@ -137,7 +175,7 @@ export default function ServiceCreate() {
                             />
                         </div>
                         <FieldError className="text-sm font-medium text-red-500">
-                            {errors.price}
+                            {t(errors.price)}
                         </FieldError>
                     </TextField>
 
@@ -156,7 +194,7 @@ export default function ServiceCreate() {
                         isInvalid={!!errors.duration}
                     >
                         <Label className="text-sm font-medium tracking-tight text-white/80">
-                            Duración
+                            {t('Duración')}{' '}
                         </Label>
                         <div className="relative">
                             <Input
@@ -165,22 +203,22 @@ export default function ServiceCreate() {
                                 className="w-full rounded-lg bg-white/5 py-3 pr-16 pl-4 text-white transition-colors duration-150 outline-none placeholder:text-white/30 focus:ring-2 focus:ring-amber-500"
                             />
                             <span className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm text-white/40">
-                                min
+                                {t('min')}{' '}
                             </span>
                         </div>
                         <FieldError className="text-sm font-medium text-red-500">
-                            {errors.duration}
+                            {t(errors.duration)}
                         </FieldError>
                     </TextField>
                 </div>
 
-                <button
+                <NativeButton
                     type="submit"
                     disabled={processing}
                     className="mt-10 w-full max-w-xs bg-white py-3.5 text-lg font-semibold tracking-tight text-black transition-transform duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    {processing ? 'Guardando…' : 'Crear Servicio'}
-                </button>
+                    {processing ? t('Guardando…') : t('Crear Servicio')}
+                </NativeButton>
             </Form>
         </FormLayout>
     );

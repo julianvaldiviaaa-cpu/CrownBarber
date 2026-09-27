@@ -22,11 +22,14 @@ it('publica solo servicios activos y no eliminados con sus precios reales', func
     Service::factory()->create()->delete();
 
     $this->get(route($route))->assertInertia(fn (Assert $page) => $page
-        ->has('services', 1)
+        ->has('services', 2)
         ->where('services.0.id', $service->id)
         ->where('services.0.price', '250.00')
         ->where('services.0.duration', 45)
-        ->missing('services.0.deleted_at'));
+        ->missing('services.0.deleted_at')
+        ->where('services.1.name', 'Facial')
+        ->where('services.1.price', '650.00')
+        ->where('services.1.duration', 75));
 })->with(['home', 'public.services']);
 
 it('publica el equipo sin datos privados ni clientes ni cuentas eliminadas', function (string $route) {
@@ -38,7 +41,7 @@ it('publica el equipo sin datos privados ni clientes ni cuentas eliminadas', fun
     $response = $this->get(route($route))->assertInertia(fn (Assert $page) => $page->has('barbers', 2));
 
     foreach ($response->inertiaProps('barbers') as $barber) {
-        expect(array_keys($barber))->toBe(['id', 'name']);
+        expect(array_keys($barber))->toBe(['id', 'name', 'specialty', 'description', 'profile_photo_url', 'cover_photo_url', 'gallery']);
     }
 })->with(['home', 'public.barbers']);
 

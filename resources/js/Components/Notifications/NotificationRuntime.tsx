@@ -3,6 +3,7 @@ import { router, usePage, usePoll } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { notifications as savePreferences } from '@/actions/App/Http/Controllers/ProfileController';
 import NotificationSettings from '@/Components/Notifications/NotificationSettings';
+import { useTranslation } from '@/lib/i18n';
 import {
     playNotificationSound,
     unlockNotificationSound,
@@ -20,6 +21,8 @@ export default function NotificationRuntime() {
 }
 
 function AuthenticatedNotifications() {
+    const { t } = useTranslation();
+
     const { auth } = usePage().props;
     const [dismissed, setDismissed] = useState(false);
     usePoll(POLL_INTERVAL_MS, { only: ['auth'] });
@@ -105,7 +108,9 @@ function AuthenticatedNotifications() {
                         <Modal.CloseTrigger />
                         <Modal.Header>
                             <Modal.Heading>
-                                ¿Activar notificaciones de tus citas?
+                                {t(
+                                    '¿Activar notificaciones de tus citas?',
+                                )}{' '}
                             </Modal.Heading>
                         </Modal.Header>
                         <Modal.Body>
@@ -114,7 +119,7 @@ function AuthenticatedNotifications() {
                             />
                         </Modal.Body>
                         <Modal.Footer>
-                            <Button onPress={close}>Ahora no</Button>
+                            <Button onPress={close}>{t('Ahora no')}</Button>
                         </Modal.Footer>
                     </Modal.Dialog>
                 </Modal.Container>

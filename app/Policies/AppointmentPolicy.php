@@ -34,7 +34,7 @@ class AppointmentPolicy
         $isParty = $user->id === $appointment->user_id
             || $user->id === $appointment->worker_id;
 
-        if (! $isParty || $appointment->status === AppointmentStatus::Cancelled) {
+        if (! $isParty || in_array($appointment->status, [AppointmentStatus::Cancelled, AppointmentStatus::Completed], true)) {
             return false;
         }
 
@@ -100,5 +100,13 @@ class AppointmentPolicy
         }
 
         return $appointment->status !== AppointmentStatus::Cancelled;
+    }
+
+    public function complete(User $user, Appointment $appointment): bool
+    {
+        return $user->id === $appointment->worker_id
+            && in_array($user->role, [UserRoles::Worker, UserRoles::Admin], true)
+            && $appointment->status === AppointmentStatus::Confirmed
+            && $appointment->starts_at->copy()->addMinutes($appointment->total_duration)->isPast();
     }
 }

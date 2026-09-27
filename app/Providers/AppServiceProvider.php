@@ -6,6 +6,7 @@ use App\Models\BusinessHourOverride;
 use App\Policies\BusinessHourPolicy;
 use Carbon\CarbonImmutable;
 use GuzzleHttp\Client;
+use Illuminate\Foundation\Console\ServeCommand;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -36,6 +37,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (PHP_OS_FAMILY === 'Windows' && $this->app->runningInConsole()) {
+            ServeCommand::$passthroughVariables = array_values(array_unique([
+                ...ServeCommand::$passthroughVariables,
+                'TEMP',
+                'TMP',
+                'TMPDIR',
+            ]));
+        }
+
         if (config('services.webpush.openssl_config')) {
             putenv('OPENSSL_CONF='.config('services.webpush.openssl_config'));
         }

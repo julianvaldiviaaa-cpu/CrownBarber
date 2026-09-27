@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateNotificationPreferencesRequest;
 use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateProfileRequest;
+use App\UserRoles;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 
@@ -28,6 +29,8 @@ class ProfileController extends Controller
     {
         return Inertia::render('Dashboard/Profile/Profile', [
             'user' => auth()->user(),
+            'portfolio' => in_array(auth()->user()->role, [UserRoles::Worker, UserRoles::Admin], true)
+                ? auth()->user()->publicWorkerProfile() : null,
         ]);
     }
 

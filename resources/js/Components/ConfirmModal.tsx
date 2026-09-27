@@ -1,5 +1,7 @@
-import { Button, Modal, useOverlayState } from '@heroui/react';
+import { Modal, useOverlayState } from '@heroui/react';
 import type { ReactNode } from 'react';
+import { Button } from '@/Components/Watermelon';
+import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 type Props = {
@@ -19,8 +21,8 @@ type Props = {
 export default function ConfirmModal({
     heading,
     message,
-    confirmLabel = 'Confirmar',
-    cancelLabel = 'Cancelar',
+    confirmLabel,
+    cancelLabel,
     danger = true,
     onConfirm,
     state: externalState,
@@ -28,6 +30,8 @@ export default function ConfirmModal({
     triggerClassName,
     triggerAriaLabel,
 }: Props) {
+    const { t } = useTranslation();
+
     const internalState = useOverlayState();
     const state = externalState ?? internalState;
 
@@ -51,7 +55,7 @@ export default function ConfirmModal({
             <Modal state={state}>
                 <Modal.Backdrop>
                     <Modal.Container size="sm">
-                        <Modal.Dialog>
+                        <Modal.Dialog className="wm-overlay">
                             <Modal.CloseTrigger />
                             <Modal.Header>
                                 <Modal.Heading>{heading}</Modal.Heading>
@@ -66,7 +70,7 @@ export default function ConfirmModal({
                                     slot="close"
                                     className="flex-1 rounded-full border border-gray-200 py-2.5 text-sm font-semibold tracking-tight text-black/70"
                                 >
-                                    {cancelLabel}
+                                    {cancelLabel ?? t('Cancelar')}
                                 </Button>
                                 <Button
                                     onPress={handleConfirm}
@@ -77,7 +81,7 @@ export default function ConfirmModal({
                                             : 'bg-black',
                                     )}
                                 >
-                                    {confirmLabel}
+                                    {confirmLabel ?? t('Confirmar')}
                                 </Button>
                             </Modal.Footer>
                         </Modal.Dialog>

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
@@ -18,8 +19,9 @@ use Illuminate\Support\Str;
  * @property int $duration
  * @property bool $active
  * @property string $slug
+ * @property-read Pivot $pivot When loaded through an appointment.
  */
-#[Fillable(['name', 'description', 'price', 'duration', 'active', 'slug'])]
+#[Fillable(['name', 'description', 'price', 'duration', 'active', 'slug', 'loyalty_reward_type'])]
 class Service extends Model
 {
     use HasFactory;

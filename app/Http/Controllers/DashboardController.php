@@ -6,15 +6,19 @@ use App\Http\Requests\FilterAppointmentsRequest;
 use App\Models\Appointment;
 use App\Models\Service;
 use App\Models\User;
+use App\Services\LoyaltyService;
 use App\UserRoles;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(private LoyaltyService $loyalty) {}
+
     public function index(FilterAppointmentsRequest $request): Response
     {
         $user = $request->user();
+        $this->loyalty->synchronize($user);
         $filters = $request->filters();
         $isAdmin = $user->role === UserRoles::Admin;
 
@@ -37,6 +41,7 @@ class DashboardController extends Controller
             ] : null,
             'appointments' => $appointments,
             'filters' => $filters,
+            'loyalty' => $user->role === UserRoles::User ? $this->loyalty->summary($user) : null,
         ]);
     }
 }

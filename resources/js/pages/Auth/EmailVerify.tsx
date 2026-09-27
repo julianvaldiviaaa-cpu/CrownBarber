@@ -2,9 +2,13 @@ import { router, usePage } from '@inertiajs/react';
 import { MailCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { route } from 'ziggy-js';
+import { NativeButton } from '@/Components/Watermelon';
 import AppLayout from '@/Layouts/AppLayout';
+import { useTranslation } from '@/lib/i18n';
 
 export default function EmailVerify() {
+    const { t } = useTranslation();
+
     const { auth, status } = usePage().props;
     const user = auth?.user;
 
@@ -46,41 +50,47 @@ export default function EmailVerify() {
                 </div>
 
                 <h1 className="mt-8 text-center text-4xl font-medium tracking-[-0.02em] md:text-6xl">
-                    Verifica tu email
+                    {t('Verifica tu email')}{' '}
                 </h1>
                 <p className="mt-4 text-center text-base/6 tracking-tight text-black/60">
-                    Enviamos un enlace de verificación a{' '}
+                    {t('Enviamos un enlace de verificación a')}{' '}
                     <span className="font-medium text-black">
                         {user?.email}
                     </span>
-                    . Ábrelo para activar tu cuenta.
+                    {t('. Ábrelo para activar tu cuenta.')}{' '}
                 </p>
 
                 <div className="mt-12 w-full rounded-2xl bg-black p-8 text-center">
                     <h2 className="text-xl font-medium tracking-tight text-white">
-                        ¿No te llegó nada?
+                        {t('¿No te llegó nada?')}{' '}
                     </h2>
                     <p className="mt-2 text-sm tracking-tight text-white/50">
-                        Revisa spam o pide que te lo enviemos de nuevo
+                        {t(
+                            'Revisa spam o pide que te lo enviemos de nuevo',
+                        )}{' '}
                     </p>
 
                     <div className="mt-6 flex flex-col items-center gap-3">
-                        <button
+                        <NativeButton
                             type="button"
                             onClick={handleResend}
                             disabled={sending || cooldown > 0}
                             className="border-2 border-white px-6 py-3.5 text-center text-sm font-semibold tracking-tight text-white transition-transform duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:border-white/30 disabled:text-white/30 disabled:active:scale-100"
                         >
                             {sending
-                                ? 'Enviando…'
+                                ? t('Enviando…')
                                 : cooldown > 0
-                                  ? `Reenviar en ${cooldown}s`
-                                  : 'Reenviar Email'}
-                        </button>
+                                  ? t('Reenviar en {seconds}s', {
+                                        seconds: cooldown,
+                                    })
+                                  : t('Reenviar Email')}
+                        </NativeButton>
 
                         {justSent && !sending && (
                             <p className="text-sm font-medium tracking-tight text-amber-400">
-                                Enlace reenviado. Revisa tu bandeja de entrada.
+                                {t(
+                                    'Enlace reenviado. Revisa tu bandeja de entrada.',
+                                )}{' '}
                             </p>
                         )}
                     </div>

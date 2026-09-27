@@ -5,3 +5,6 @@ Before planning or editing, find the row whose globs match the file's path and r
 | Applies to | Rule file |
 | --- | --- |
 | app/{Http,Models,Notifications,Services}/** | .ai/rules/http-models-notifications-services.md |
+| app/{Http,Models,Services,Policies}/** | .ai/rules/http-models-services-policies.md |
+| resources/{js,css}/** | .ai/rules/jscss.md |
+| app/Providers/** | .ai/rules/providers.md |

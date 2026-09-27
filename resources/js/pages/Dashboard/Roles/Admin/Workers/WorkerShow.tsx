@@ -1,7 +1,5 @@
 import {
-    Button,
     FieldError,
-    Input,
     Link,
     Modal,
     TextField,
@@ -13,24 +11,32 @@ import type { SyntheticEvent } from 'react';
 import { useEffect, useRef } from 'react';
 import { route } from 'ziggy-js';
 import ConfirmModal from '@/Components/ConfirmModal';
+import { Button, Input, NativeButton, Card } from '@/Components/Watermelon';
+import WorkerPortfolioEditor from '@/Components/WorkerPortfolioEditor';
 import AppLayout from '@/Layouts/AppLayout';
-import type { User } from '@/types';
+import type { Translator } from '@/lib/i18n';
+import { useTranslation } from '@/lib/i18n';
+import { portfolio as savePortfolio } from '@/routes/workers';
+import type { User, WorkerProfile } from '@/types';
 
 type Props = {
     worker: User;
+    portfolio: WorkerProfile;
 };
 
-const ROLES: { value: User['role']; label: string }[] = [
-    { value: 'user', label: 'Cliente' },
-    { value: 'worker', label: 'Trabajador' },
-    { value: 'admin', label: 'Administrador' },
+const ROLES = (t: Translator): { value: User['role']; label: string }[] => [
+    { value: 'user', label: t('Cliente') },
+    { value: 'worker', label: t('Trabajador') },
+    { value: 'admin', label: t('Administrador') },
 ];
 
 // Borde invisible por default → punteado gray-300 en hover → sólido negro en focus.
 const editableField =
     'border-b-2 border-transparent bg-transparent outline-none transition-colors duration-150 hover:border-dashed hover:border-gray-300 focus:border-solid focus:border-black';
 
-export default function WorkerShow({ worker }: Props) {
+export default function WorkerShow({ worker, portfolio }: Props) {
+    const { t } = useTranslation();
+
     const {
         data,
         setData,
@@ -121,7 +127,7 @@ export default function WorkerShow({ worker }: Props) {
                     className="inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.15em] text-black/40 uppercase transition-colors duration-150 hover:text-black"
                 >
                     <ArrowLeft size={12} />
-                    Trabajadores
+                    {t('Trabajadores')}{' '}
                 </Link>
 
                 {/* Header — nombre del trabajador */}
@@ -140,11 +146,11 @@ export default function WorkerShow({ worker }: Props) {
                         className="block max-w-xl"
                     >
                         <Input
-                            placeholder="Nombre del trabajador"
+                            placeholder={t('Nombre del trabajador')}
                             className={`w-full px-0 py-1 text-4xl font-bold tracking-tight text-black md:text-5xl ${editableField}`}
                         />
                         <FieldError className="mt-2 block text-sm font-medium text-red-500">
-                            {errors.name}
+                            {t(errors.name)}
                         </FieldError>
                     </TextField>
                 </div>
@@ -155,7 +161,7 @@ export default function WorkerShow({ worker }: Props) {
                     <div className="flex flex-col gap-8 md:col-span-2">
                         <div>
                             <h3 className="text-xs font-semibold tracking-widest text-black/40 uppercase">
-                                Correo electrónico
+                                {t('Correo electrónico')}{' '}
                             </h3>
                             <TextField
                                 name="email"
@@ -179,14 +185,14 @@ export default function WorkerShow({ worker }: Props) {
                                     />
                                 </div>
                                 <FieldError className="mt-1 block text-sm font-medium text-red-500">
-                                    {errors.email}
+                                    {t(errors.email)}
                                 </FieldError>
                             </TextField>
                         </div>
 
                         <div>
                             <h3 className="text-xs font-semibold tracking-widest text-black/40 uppercase">
-                                Teléfono
+                                {t('Teléfono')}{' '}
                             </h3>
                             <TextField
                                 name="phone"
@@ -208,12 +214,12 @@ export default function WorkerShow({ worker }: Props) {
                                         className="text-black/30"
                                     />
                                     <Input
-                                        placeholder="10 dígitos"
+                                        placeholder={t('10 dígitos')}
                                         className={`w-full px-0 py-1 text-lg tracking-tight text-black/70 ${editableField}`}
                                     />
                                 </div>
                                 <FieldError className="mt-1 block text-sm font-medium text-red-500">
-                                    {errors.phone}
+                                    {t(errors.phone)}
                                 </FieldError>
                             </TextField>
                         </div>
@@ -221,9 +227,9 @@ export default function WorkerShow({ worker }: Props) {
 
                     {/* Panel lateral: rol + zona de peligro */}
                     <div className="flex flex-col gap-6 md:col-span-1">
-                        <div className="rounded-2xl border border-gray-200 p-6 shadow-sm">
+                        <Card className="rounded-2xl border border-gray-200 p-6 shadow-sm">
                             <h3 className="text-xs font-semibold tracking-widest text-black/40 uppercase">
-                                Rol
+                                {t('Rol')}{' '}
                             </h3>
                             <select
                                 value={data.role}
@@ -239,7 +245,7 @@ export default function WorkerShow({ worker }: Props) {
                                 }}
                                 className="mt-3 w-full appearance-none rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold tracking-tight text-black transition-colors duration-150 outline-none focus:border-black"
                             >
-                                {ROLES.map((role) => (
+                                {ROLES(t).map((role) => (
                                     <option key={role.value} value={role.value}>
                                         {role.label}
                                     </option>
@@ -247,47 +253,50 @@ export default function WorkerShow({ worker }: Props) {
                             </select>
                             {errors.role && (
                                 <p className="mt-1 text-xs font-medium text-red-500">
-                                    {errors.role}
+                                    {t(errors.role)}
                                 </p>
                             )}
-                        </div>
+                        </Card>
 
                         {/* Zona de peligro */}
                         <div className="rounded-2xl border border-red-100 bg-red-50/40 p-6">
                             <h3 className="text-xs font-semibold tracking-widest text-red-400 uppercase">
-                                Eliminar Trabajdor
+                                {t('Eliminar Trabajdor')}{' '}
                             </h3>
                             <p className="mt-2 text-sm text-black/50">
-                                Al eliminar a este trabajador perderá acceso a
-                                su cuenta. Esta acción no se puede deshacer.
+                                {t(
+                                    'Al eliminar a este trabajador perderá acceso a su cuenta. Esta acción no se puede deshacer.',
+                                )}{' '}
                             </p>
 
                             <Modal>
                                 <Button className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-semibold tracking-tight text-red-600 transition-colors duration-150 hover:bg-red-50">
                                     <Trash2 size={14} />
-                                    Eliminar trabajador
+                                    {t('Eliminar trabajador')}{' '}
                                 </Button>
                                 <Modal.Backdrop>
                                     <Modal.Container>
-                                        <Modal.Dialog>
+                                        <Modal.Dialog className="wm-overlay">
                                             <Modal.CloseTrigger />
                                             <Modal.Header>
                                                 <Modal.Icon>
                                                     <Trash2 />
                                                 </Modal.Icon>
                                                 <Modal.Heading>
-                                                    ¿Eliminar a este trabajador?
+                                                    {t(
+                                                        '¿Eliminar a este trabajador?',
+                                                    )}{' '}
                                                 </Modal.Heading>
                                             </Modal.Header>
                                             <Modal.Body>
                                                 <p>
-                                                    Si eliminas a{' '}
+                                                    {t('Si eliminas a')}{' '}
                                                     <strong>
                                                         {worker.name}
                                                     </strong>
-                                                    , perderá acceso a su cuenta
-                                                    de inmediato. Esta acción no
-                                                    se puede deshacer.
+                                                    {t(
+                                                        ', perderá acceso a su cuenta de inmediato. Esta acción no se puede deshacer.',
+                                                    )}{' '}
                                                 </p>
                                             </Modal.Body>
                                             <Modal.Footer className="flex items-center justify-center gap-3">
@@ -295,13 +304,13 @@ export default function WorkerShow({ worker }: Props) {
                                                     slot="close"
                                                     className="w-full rounded-full border border-gray-200 py-2.5 text-sm font-semibold tracking-tight text-black/70"
                                                 >
-                                                    Cancelar
+                                                    {t('Cancelar')}{' '}
                                                 </Button>
                                                 <Button
                                                     onClick={handleDelete}
                                                     className="w-full rounded-full bg-red-600 py-2.5 text-sm font-semibold tracking-tight text-white hover:bg-red-700"
                                                 >
-                                                    Eliminar
+                                                    {t('Eliminar')}{' '}
                                                 </Button>
                                             </Modal.Footer>
                                         </Modal.Dialog>
@@ -312,6 +321,16 @@ export default function WorkerShow({ worker }: Props) {
                     </div>
                 </div>
             </form>
+
+            {(worker.role === 'worker' || worker.role === 'admin') && (
+                <div className="mx-auto max-w-5xl pb-16">
+                    <WorkerPortfolioEditor
+                        key={worker.id}
+                        worker={portfolio}
+                        submitUrl={savePortfolio.url(worker.id)}
+                    />
+                </div>
+            )}
 
             {/* Barra de guardado — discreta pero notoria, solo aparece con cambios sin guardar */}
             <div
@@ -324,31 +343,33 @@ export default function WorkerShow({ worker }: Props) {
             >
                 <div className="flex items-center gap-4 rounded-full border border-gray-700 bg-black px-5 py-2.5 shadow-xl shadow-black/30">
                     <p className="text-sm font-medium tracking-tight text-gray-300">
-                        Cambios sin guardar
+                        {t('Cambios sin guardar')}{' '}
                     </p>
-                    <button
+                    <NativeButton
                         type="button"
                         onClick={() => reset()}
                         className="text-sm font-medium tracking-tight text-white/40 transition-colors duration-150 hover:text-white"
                     >
-                        Descartar
-                    </button>
-                    <button
+                        {t('Descartar')}{' '}
+                    </NativeButton>
+                    <NativeButton
                         type="submit"
                         form="worker-form"
                         disabled={processing}
                         className="rounded-full bg-white px-5 py-2 text-sm font-semibold tracking-tight text-black transition-transform duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        {processing ? 'Guardando…' : 'Guardar cambios'}
-                    </button>
+                        {processing ? t('Guardando…') : t('Guardar cambios')}
+                    </NativeButton>
                 </div>
             </div>
 
             <ConfirmModal
                 state={leaveState}
-                heading="Cambios sin guardar"
-                message="¿Salir de todos modos? Los cambios que no hayas guardado se perderán."
-                confirmLabel="Salir sin guardar"
+                heading={t('Cambios sin guardar')}
+                message={t(
+                    '¿Salir de todos modos? Los cambios que no hayas guardado se perderán.',
+                )}
+                confirmLabel={t('Salir sin guardar')}
                 onConfirm={confirmLeave}
             />
         </AppLayout>

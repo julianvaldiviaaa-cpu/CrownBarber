@@ -1,9 +1,10 @@
-import { Button } from '@heroui/react';
 import { Link, router, usePoll } from '@inertiajs/react';
 import { CalendarPlus, ChevronLeft } from 'lucide-react';
 import { route } from 'ziggy-js';
 import AppointmentsSection from '@/Components/Appointments/AppointmentsSection';
+import { Button } from '@/Components/Watermelon';
 import AppLayout from '@/Layouts/AppLayout';
+import { useTranslation } from '@/lib/i18n';
 import { POLL_INTERVAL_MS } from '@/lib/utils';
 import type { Appointment, Paginated } from '@/types';
 
@@ -12,6 +13,8 @@ type Props = {
 };
 
 export default function AppointmentsIndex({ appointments }: Props) {
+    const { t } = useTranslation();
+
     usePoll(POLL_INTERVAL_MS, { only: ['appointments'] });
 
     return (
@@ -23,14 +26,15 @@ export default function AppointmentsIndex({ appointments }: Props) {
                             onClick={() => router.get(route('dashboard'))}
                             className="mb-5 flex items-center justify-center gap-2 bg-black px-6 text-lg text-gray-300 transition-all duration-300 hover:gap-4"
                         >
-                            <ChevronLeft /> Dashboard
+                            <ChevronLeft /> {t('Dashboard')}{' '}
                         </Button>
                         <h1 className="text-5xl font-bold tracking-tight text-black md:text-6xl">
-                            Citas
+                            {t('Citas')}{' '}
                         </h1>
                         <p className="mt-2 text-sm font-medium tracking-tight text-black/40">
-                            {appointments.total} cita
-                            {appointments.total === 1 ? '' : 's'} en total
+                            {appointments.total} {t('cita')}{' '}
+                            {appointments.total === 1 ? '' : 's'}{' '}
+                            {t('en total')}{' '}
                         </p>
                     </div>
                     <Link
@@ -38,7 +42,7 @@ export default function AppointmentsIndex({ appointments }: Props) {
                         className="flex items-center gap-1.5 rounded-full bg-black px-5 py-2.5 text-sm font-semibold tracking-tight text-white transition-transform duration-150 active:scale-[0.97]"
                     >
                         <CalendarPlus size={15} />
-                        Nueva cita
+                        {t('Nueva cita')}{' '}
                     </Link>
                 </div>
 

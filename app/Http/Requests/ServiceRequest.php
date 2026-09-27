@@ -14,6 +14,7 @@ class ServiceRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'loyalty_reward_type' => ['nullable', 'string', 'in:haircut,facial'],
             'name' => [
                 'required',
                 'string',

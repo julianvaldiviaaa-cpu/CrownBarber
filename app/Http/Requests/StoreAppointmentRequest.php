@@ -31,10 +31,7 @@ class StoreAppointmentRequest extends FormRequest
             'worker_id' => [
                 'required',
                 'integer',
-                Rule::exists('users', 'id')->whereIn('role', [
-                    UserRoles::Worker->value,
-                    UserRoles::Admin->value,
-                ])->withoutTrashed(),
+                Rule::exists('users', 'id')->where('role', UserRoles::Worker->value)->withoutTrashed(),
             ],
 
             'services' => [
@@ -124,8 +121,7 @@ class StoreAppointmentRequest extends FormRequest
     {
         return [
             'worker_id.required' => 'Debes elegir un barbero.',
-            'worker_id.exists' => 'El barbero seleccionado no existe.',
-            'worker_id.role' => 'El barbero seleccionado no está habilitado para atender.',
+            'worker_id.exists' => 'El barbero seleccionado no está disponible o no tiene el rol de trabajador.',
 
             'services.required' => 'Selecciona al menos un servicio.',
             'services.array' => 'Los servicios no son válidos.',

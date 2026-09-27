@@ -7,6 +7,9 @@ export type User = {
     phone: string;
     role: 'user' | 'worker' | 'admin';
     avatar?: string;
+    profile_photo_url: string;
+    cover_photo_url: string;
+    specialty: string | null;
     email_verified_at: string | null;
     notification_sound: boolean;
     notification_prompted_at: string | null;

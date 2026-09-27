@@ -1,8 +1,10 @@
-import { Button, Modal, useOverlayState } from '@heroui/react';
+import { Modal, useOverlayState } from '@heroui/react';
 import { router } from '@inertiajs/react';
 import { CalendarClock, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { route } from 'ziggy-js';
+import { Button, NativeButton, NativeInput } from '@/Components/Watermelon';
+import { useTranslation } from '@/lib/i18n';
 import { cn, formatSlotTime, toISODate } from '@/lib/utils';
 import type { Appointment } from '@/types';
 
@@ -15,6 +17,8 @@ export default function ProposeTimeModal({
     appointment,
     compact = false,
 }: Props) {
+    const { t } = useTranslation();
+
     const state = useOverlayState();
     const [date, setDate] = useState('');
     const [slots, setSlots] = useState<string[]>([]);
@@ -57,7 +61,7 @@ export default function ProposeTimeModal({
             setSlots(payload.slots ?? []);
         } catch {
             setSlots([]);
-            setError('No se pudo consultar la disponibilidad.');
+            setError(t('No se pudo consultar la disponibilidad.'));
         } finally {
             setLoading(false);
         }
@@ -81,7 +85,7 @@ export default function ProposeTimeModal({
         <>
             <Button
                 onPress={openModal}
-                aria-label="Proponer nueva hora"
+                aria-label={t('Proponer nueva hora')}
                 className={cn(
                     compact
                         ? 'flex h-9 w-9 items-center justify-center rounded-full border border-blue-200 bg-blue-50 p-0 text-blue-700 transition-colors hover:bg-blue-100'
@@ -89,34 +93,34 @@ export default function ProposeTimeModal({
                 )}
             >
                 <CalendarClock size={15} />
-                {!compact && 'Proponer hora'}
+                {!compact && t('Proponer hora')}
             </Button>
 
             <Modal state={state}>
                 <Modal.Backdrop>
                     <Modal.Container size="md">
-                        <Modal.Dialog>
+                        <Modal.Dialog className="wm-overlay">
                             <Modal.CloseTrigger />
                             <Modal.Header>
                                 <Modal.Icon>
                                     <CalendarClock />
                                 </Modal.Icon>
                                 <Modal.Heading>
-                                    Proponer una nueva hora
+                                    {t('Proponer una nueva hora')}{' '}
                                 </Modal.Heading>
                             </Modal.Header>
                             <Modal.Body>
                                 <p className="text-sm text-black/60">
-                                    Elige el día y una hora disponible para el
-                                    barbero. La otra parte podrá confirmarla,
-                                    rechazarla o proponer otra.
+                                    {t(
+                                        'Elige el día y una hora disponible para el barbero. La otra parte podrá confirmarla, rechazarla o proponer otra.',
+                                    )}{' '}
                                 </p>
 
                                 <div className="mt-4">
                                     <label className="text-sm font-semibold tracking-tight text-black">
-                                        Día
+                                        {t('Día')}{' '}
                                     </label>
-                                    <input
+                                    <NativeInput
                                         type="date"
                                         min={today}
                                         value={date}
@@ -133,18 +137,18 @@ export default function ProposeTimeModal({
                                             size={16}
                                             className="animate-spin"
                                         />
-                                        Consultando disponibilidad…
+                                        {t('Consultando disponibilidad…')}{' '}
                                     </div>
                                 )}
 
                                 {!loading && date && slots.length > 0 && (
                                     <div className="mt-4">
                                         <label className="text-sm font-semibold tracking-tight text-black">
-                                            Hora
+                                            {t('Hora')}{' '}
                                         </label>
                                         <div className="mt-2 grid grid-cols-3 gap-2">
                                             {slots.map((slot) => (
-                                                <button
+                                                <NativeButton
                                                     key={slot}
                                                     type="button"
                                                     onClick={() =>
@@ -158,7 +162,7 @@ export default function ProposeTimeModal({
                                                     )}
                                                 >
                                                     {formatSlotTime(slot)}
-                                                </button>
+                                                </NativeButton>
                                             ))}
                                         </div>
                                     </div>
@@ -166,13 +170,15 @@ export default function ProposeTimeModal({
 
                                 {!loading && date && slots.length === 0 && (
                                     <p className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                                        No hay horas disponibles para ese día.
+                                        {t(
+                                            'No hay horas disponibles para ese día.',
+                                        )}{' '}
                                     </p>
                                 )}
 
                                 {error && (
                                     <p className="mt-4 text-sm text-red-600">
-                                        {error}
+                                        {t(error)}
                                     </p>
                                 )}
                             </Modal.Body>
@@ -181,14 +187,14 @@ export default function ProposeTimeModal({
                                     slot="close"
                                     className="flex-1 rounded-full border border-gray-200 py-2.5 text-sm font-semibold tracking-tight text-black/70"
                                 >
-                                    Cancelar
+                                    {t('Cancelar')}{' '}
                                 </Button>
                                 <Button
                                     onPress={submit}
                                     isDisabled={!date || !time}
                                     className="flex-1 rounded-full bg-black py-2.5 text-sm font-semibold tracking-tight text-white disabled:cursor-not-allowed disabled:opacity-40"
                                 >
-                                    Proponer hora
+                                    {t('Proponer hora')}{' '}
                                 </Button>
                             </Modal.Footer>
                         </Modal.Dialog>

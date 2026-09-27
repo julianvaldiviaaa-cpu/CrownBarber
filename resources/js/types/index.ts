@@ -1,5 +1,15 @@
 export type * from './auth';
 
+export type WorkerProfile = {
+    id: number;
+    name: string;
+    specialty: string | null;
+    description: string | null;
+    profile_photo_url: string;
+    cover_photo_url: string;
+    gallery: { id: string; url: string }[];
+};
+
 export type Flash = {
     success: string | null;
     error: string | null;
@@ -33,6 +43,7 @@ export type Service = {
     duration: number;
     active: boolean;
     slug: string;
+    loyalty_reward_type: 'haircut' | 'facial' | null;
 };
 
 export type AdminDashboardStats = {
@@ -41,7 +52,7 @@ export type AdminDashboardStats = {
 };
 
 export type AppointmentStatus =
-    'pending' | 'proposed' | 'confirmed' | 'cancelled';
+    'pending' | 'proposed' | 'confirmed' | 'cancelled' | 'completed';
 
 export type AppointmentUser = {
     id: number;
@@ -69,6 +80,11 @@ export type Appointment = {
     proposed_by: number | null;
     cancelled_by: number | null;
     created_at: string;
+    completed_at: string | null;
+    loyalty_visit_date: string | null;
+    loyalty_reward_service_id: number | null;
+    loyalty_reward_name: string | null;
+    loyalty_discount: string;
     user?: AppointmentUser;
     worker?: AppointmentUser;
     proposer?: AppointmentUser | null;
@@ -115,4 +131,12 @@ export type BusinessHourOverride = {
 export type BusinessHoursPayload = {
     weekly: BusinessHour[];
     overrides: BusinessHourOverride[];
+};
+
+export type Loyalty = {
+    stamps: number;
+    target: number;
+    rewards_available: number;
+    rewards_redeemed: number;
+    visits: number;
 };

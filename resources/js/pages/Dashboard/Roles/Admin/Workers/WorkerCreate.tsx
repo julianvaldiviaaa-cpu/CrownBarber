@@ -1,24 +1,22 @@
-import {
-    FieldError,
-    Form,
-    Input,
-    Label,
-    TextField,
-    Button,
-} from '@heroui/react';
+import { FieldError, Form, Label, TextField } from '@heroui/react';
 import { useForm, router } from '@inertiajs/react';
 import { ChevronLeft } from 'lucide-react';
 import type { SyntheticEvent } from 'react';
 import { route } from 'ziggy-js';
+import { Button, Input, NativeButton } from '@/Components/Watermelon';
 import FormLayout from '@/Layouts/FormLayout';
+import type { Translator } from '@/lib/i18n';
+import { useTranslation } from '@/lib/i18n';
 
-const ROLES = [
-    { value: 'user', label: 'Cliente' },
-    { value: 'worker', label: 'Trabajador' },
-    { value: 'admin', label: 'Administrador' },
+const ROLES = (t: Translator) => [
+    { value: 'user', label: t('Cliente') },
+    { value: 'worker', label: t('Trabajador') },
+    { value: 'admin', label: t('Administrador') },
 ];
 
 export default function WorkerCreate() {
+    const { t } = useTranslation();
+
     const { data, setData, errors, clearErrors, post, reset, processing } =
         useForm({
             name: '',
@@ -45,18 +43,19 @@ export default function WorkerCreate() {
                 onClick={() => router.get(route('dashboard'))}
                 className="mb-10 flex items-center justify-center gap-2 bg-black text-gray-300 transition-all duration-300 hover:gap-4"
             >
-                <ChevronLeft /> Dashboard
+                <ChevronLeft /> {t('Dashboard')}{' '}
             </Button>
             <Form
                 onSubmit={handleSubmit}
                 className="mx-auto flex w-full max-w-3xl flex-col items-center rounded-3xl bg-black px-6 py-12 md:px-12"
             >
                 <h1 className="text-center text-4xl font-medium tracking-[-0.02em] text-white md:text-5xl">
-                    Nuevo Empleado
+                    {t('Nuevo Empleado')}{' '}
                 </h1>
                 <p className="mx-auto my-6 max-w-sm text-center text-base/6 tracking-tight text-white/60">
-                    Llena el siguiente formulario para dar de alta a un nuevo
-                    empleado y asignarle su rol
+                    {t(
+                        'Llena el siguiente formulario para dar de alta a un nuevo empleado y asignarle su rol',
+                    )}{' '}
                 </p>
 
                 <div className="mt-6 grid w-full grid-cols-1 gap-6 md:grid-cols-2">
@@ -76,14 +75,14 @@ export default function WorkerCreate() {
                         className="col-span-1 md:col-span-2"
                     >
                         <Label className="text-sm font-medium tracking-tight text-white/80">
-                            Nombre
+                            {t('Nombre')}{' '}
                         </Label>
                         <Input
-                            placeholder="Nombre completo"
+                            placeholder={t('Nombre completo')}
                             className="w-full rounded-lg bg-white/5 px-4 py-3 text-white transition-colors duration-150 outline-none placeholder:text-white/30 focus:ring-2 focus:ring-amber-500"
                         />
                         <FieldError className="text-sm font-medium text-red-500">
-                            {errors.name}
+                            {t(errors.name)}
                         </FieldError>
                     </TextField>
 
@@ -102,14 +101,14 @@ export default function WorkerCreate() {
                         isInvalid={!!errors.email}
                     >
                         <Label className="text-sm font-medium tracking-tight text-white/80">
-                            Correo electrónico
+                            {t('Correo electrónico')}{' '}
                         </Label>
                         <Input
                             placeholder="tu@correo.com"
                             className="w-full rounded-lg bg-white/5 px-4 py-3 text-white transition-colors duration-150 outline-none placeholder:text-white/30 focus:ring-2 focus:ring-amber-500"
                         />
                         <FieldError className="text-sm font-medium text-red-500">
-                            {errors.email}
+                            {t(errors.email)}
                         </FieldError>
                     </TextField>
 
@@ -128,14 +127,14 @@ export default function WorkerCreate() {
                         isInvalid={!!errors.phone}
                     >
                         <Label className="text-sm font-medium tracking-tight text-white/80">
-                            Teléfono
+                            {t('Teléfono')}{' '}
                         </Label>
                         <Input
-                            placeholder="10 dígitos"
+                            placeholder={t('10 dígitos')}
                             className="w-full rounded-lg bg-white/5 px-4 py-3 text-white transition-colors duration-150 outline-none placeholder:text-white/30 focus:ring-2 focus:ring-amber-500"
                         />
                         <FieldError className="text-sm font-medium text-red-500">
-                            {errors.phone}
+                            {t(errors.phone)}
                         </FieldError>
                     </TextField>
 
@@ -145,7 +144,7 @@ export default function WorkerCreate() {
                             htmlFor="role"
                             className="text-sm font-medium tracking-tight text-white/80"
                         >
-                            Rol
+                            {t('Rol')}{' '}
                         </label>
                         <select
                             id="role"
@@ -165,9 +164,9 @@ export default function WorkerCreate() {
                             className="bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%23ffffff80%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z%22 clip-rule=%22evenodd%22/></svg>')] w-full appearance-none rounded-lg bg-white/5 bg-[length:1rem] bg-[right_1rem_center] bg-no-repeat px-4 py-3 text-white transition-colors duration-150 outline-none focus:ring-2 focus:ring-amber-500"
                         >
                             <option value="" disabled className="text-black">
-                                Selecciona un rol
+                                {t('Selecciona un rol')}{' '}
                             </option>
-                            {ROLES.map((role) => (
+                            {ROLES(t).map((role) => (
                                 <option
                                     key={role.value}
                                     value={role.value}
@@ -179,7 +178,7 @@ export default function WorkerCreate() {
                         </select>
                         {errors.role && (
                             <p className="text-sm font-medium text-red-500">
-                                {errors.role}
+                                {t(errors.role)}
                             </p>
                         )}
                     </div>
@@ -199,14 +198,14 @@ export default function WorkerCreate() {
                         isInvalid={!!errors.password}
                     >
                         <Label className="text-sm font-medium tracking-tight text-white/80">
-                            Contraseña
+                            {t('Contraseña')}{' '}
                         </Label>
                         <Input
-                            placeholder="Mínimo 8 caracteres"
+                            placeholder={t('Mínimo 8 caracteres')}
                             className="w-full rounded-lg bg-white/5 px-4 py-3 text-white transition-colors duration-150 outline-none placeholder:text-white/30 focus:ring-2 focus:ring-amber-500"
                         />
                         <FieldError className="text-sm font-medium text-red-500">
-                            {errors.password}
+                            {t(errors.password)}
                         </FieldError>
                     </TextField>
 
@@ -225,25 +224,25 @@ export default function WorkerCreate() {
                         isInvalid={!!errors.password_confirmation}
                     >
                         <Label className="text-sm font-medium tracking-tight text-white/80">
-                            Confirmar contraseña
+                            {t('Confirmar contraseña')}{' '}
                         </Label>
                         <Input
-                            placeholder="Repite la contraseña"
+                            placeholder={t('Repite la contraseña')}
                             className="w-full rounded-lg bg-white/5 px-4 py-3 text-white transition-colors duration-150 outline-none placeholder:text-white/30 focus:ring-2 focus:ring-amber-500"
                         />
                         <FieldError className="text-sm font-medium text-red-500">
-                            {errors.password_confirmation}
+                            {t(errors.password_confirmation)}
                         </FieldError>
                     </TextField>
                 </div>
 
-                <button
+                <NativeButton
                     type="submit"
                     disabled={processing}
                     className="mt-10 w-full max-w-xs bg-amber-500 py-3.5 text-lg font-semibold tracking-tight text-black transition-transform duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    {processing ? 'Creando…' : 'Crear Empleado'}
-                </button>
+                    {processing ? t('Creando…') : t('Crear Empleado')}
+                </NativeButton>
             </Form>
         </FormLayout>
     );

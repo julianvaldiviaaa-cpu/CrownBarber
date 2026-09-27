@@ -10,17 +10,29 @@ import {
 import type { ReactNode } from 'react';
 import { route } from 'ziggy-js';
 import NotificationSettings from '@/Components/Notifications/NotificationSettings';
+import {
+    FloatingInput,
+    NativeButton,
+    NativeInput,
+} from '@/Components/Watermelon';
+import WorkerPortfolioEditor from '@/Components/WorkerPortfolioEditor';
 import AppLayout from '@/Layouts/AppLayout';
+import { useTranslation } from '@/lib/i18n';
+import { portfolio as savePortfolio } from '@/routes/profile';
+import type { WorkerProfile } from '@/types';
 import type { User } from '@/types/auth';
 
 type Props = {
     user: User;
+    portfolio: WorkerProfile | null;
 };
 
 const inputClass =
     'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-black outline-none transition-colors focus:border-black';
 
-export default function Profile({ user }: Props) {
+export default function Profile({ user, portfolio }: Props) {
+    const { t } = useTranslation();
+
     const info = useForm({
         name: user.name,
         email: user.email,
@@ -49,28 +61,37 @@ export default function Profile({ user }: Props) {
     return (
         <AppLayout navbar="dashboard">
             <div className="mx-auto max-w-4xl px-6 py-16 md:py-20">
-                <button
+                <NativeButton
                     type="button"
                     onClick={() => router.get(route('dashboard'))}
                     className="inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.15em] text-black/40 uppercase transition-colors duration-150 hover:text-black"
                 >
                     <ArrowLeft size={12} />
-                    Dashboard
-                </button>
+                    {t('Dashboard')}{' '}
+                </NativeButton>
 
                 <div className="mt-6">
                     <h1 className="text-5xl font-bold tracking-tight text-black">
-                        Mi cuenta
+                        {t('Mi cuenta')}{' '}
                     </h1>
                     <p className="mt-2 text-sm font-medium tracking-tight text-black/40">
-                        Administra tus datos personales y tu contraseña.
+                        {t(
+                            'Administra tus datos personales y tu contraseña.',
+                        )}{' '}
                     </p>
                 </div>
 
                 <div className="mt-10 grid grid-cols-1 gap-6">
+                    {portfolio && (
+                        <WorkerPortfolioEditor
+                            key={user.id}
+                            worker={portfolio}
+                            submitUrl={savePortfolio.url()}
+                        />
+                    )}
                     <section className="rounded-2xl border border-gray-200 bg-white p-6">
                         <h2 className="mb-4 text-lg font-bold">
-                            Notificaciones
+                            {t('Notificaciones')}{' '}
                         </h2>
                         <NotificationSettings />
                     </section>
@@ -82,10 +103,10 @@ export default function Profile({ user }: Props) {
                             </span>
                             <div>
                                 <h2 className="text-lg font-bold tracking-tight text-black">
-                                    Información de la cuenta
+                                    {t('Información de la cuenta')}{' '}
                                 </h2>
                                 <p className="text-sm text-black/45">
-                                    Nombre, correo y teléfono.
+                                    {t('Nombre, correo y teléfono.')}{' '}
                                 </p>
                             </div>
                         </div>
@@ -94,47 +115,65 @@ export default function Profile({ user }: Props) {
                             onSubmit={submitInfo}
                             className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2"
                         >
-                            <Field label="Nombre" error={info.errors.name}>
-                                <input
+                            <div className="flex flex-col gap-1.5">
+                                <FloatingInput
+                                    label={t('Nombre')}
                                     type="text"
                                     value={info.data.name}
                                     onChange={(e) =>
                                         info.setData('name', e.target.value)
                                     }
-                                    className={inputClass}
-                                    placeholder="Tu nombre"
                                 />
-                            </Field>
+                                {info.errors.name && (
+                                    <p
+                                        role="alert"
+                                        className="text-xs text-red-600"
+                                    >
+                                        {info.errors.name}
+                                    </p>
+                                )}
+                            </div>
 
-                            <Field label="Teléfono" error={info.errors.phone}>
-                                <input
+                            <div className="flex flex-col gap-1.5">
+                                <FloatingInput
+                                    label={t('Teléfono')}
                                     type="tel"
                                     value={info.data.phone}
                                     onChange={(e) =>
                                         info.setData('phone', e.target.value)
                                     }
-                                    className={inputClass}
-                                    placeholder="+52 ..."
                                 />
-                            </Field>
+                                {info.errors.phone && (
+                                    <p
+                                        role="alert"
+                                        className="text-xs text-red-600"
+                                    >
+                                        {info.errors.phone}
+                                    </p>
+                                )}
+                            </div>
 
-                            <Field
-                                label="Correo electrónico"
-                                error={info.errors.email}
-                            >
-                                <input
+                            <div className="flex flex-col gap-1.5">
+                                <FloatingInput
+                                    label={t('Correo electrónico')}
                                     type="email"
                                     value={info.data.email}
                                     onChange={(e) =>
                                         info.setData('email', e.target.value)
                                     }
-                                    className={inputClass}
-                                    placeholder="correo@ejemplo.com"
                                 />
-                            </Field>
+                                {info.errors.email && (
+                                    <p
+                                        role="alert"
+                                        className="text-xs text-red-600"
+                                    >
+                                        {info.errors.email}
+                                    </p>
+                                )}
+                            </div>
 
                             <div className="flex items-end">
-                                <button
+                                <NativeButton
                                     type="submit"
                                     disabled={info.processing}
                                     className="flex items-center justify-center gap-1.5 rounded-full bg-black px-6 py-2.5 text-sm font-semibold tracking-tight text-white transition-transform active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
@@ -147,8 +186,8 @@ export default function Profile({ user }: Props) {
                                     ) : (
                                         <Save size={15} />
                                     )}
-                                    Guardar cambios
-                                </button>
+                                    {t('Guardar cambios')}{' '}
+                                </NativeButton>
                             </div>
                         </form>
                     </section>
@@ -161,11 +200,12 @@ export default function Profile({ user }: Props) {
                             </span>
                             <div>
                                 <h2 className="text-lg font-bold tracking-tight text-black">
-                                    Cambiar contraseña
+                                    {t('Cambiar contraseña')}{' '}
                                 </h2>
                                 <p className="text-sm text-black/45">
-                                    La contraseña solo puede cambiarse desde
-                                    aquí.
+                                    {t(
+                                        'La contraseña solo puede cambiarse desde aquí.',
+                                    )}{' '}
                                 </p>
                             </div>
                         </div>
@@ -175,7 +215,7 @@ export default function Profile({ user }: Props) {
                             className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2"
                         >
                             <Field
-                                label="Contraseña actual"
+                                label={t('Contraseña actual')}
                                 error={password.errors.current_password}
                             >
                                 <div className="relative">
@@ -183,7 +223,7 @@ export default function Profile({ user }: Props) {
                                         size={15}
                                         className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-black/30"
                                     />
-                                    <input
+                                    <NativeInput
                                         type="password"
                                         value={password.data.current_password}
                                         onChange={(e) =>
@@ -193,14 +233,14 @@ export default function Profile({ user }: Props) {
                                             )
                                         }
                                         className={`${inputClass} pl-9`}
-                                        placeholder="Tu contraseña actual"
+                                        placeholder={t('Tu contraseña actual')}
                                         autoComplete="current-password"
                                     />
                                 </div>
                             </Field>
 
                             <Field
-                                label="Nueva contraseña"
+                                label={t('Nueva contraseña')}
                                 error={password.errors.password}
                             >
                                 <div className="relative">
@@ -208,7 +248,7 @@ export default function Profile({ user }: Props) {
                                         size={15}
                                         className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-black/30"
                                     />
-                                    <input
+                                    <NativeInput
                                         type="password"
                                         value={password.data.password}
                                         onChange={(e) =>
@@ -218,14 +258,14 @@ export default function Profile({ user }: Props) {
                                             )
                                         }
                                         className={`${inputClass} pl-9`}
-                                        placeholder="Mínimo 8 caracteres"
+                                        placeholder={t('Mínimo 8 caracteres')}
                                         autoComplete="new-password"
                                     />
                                 </div>
                             </Field>
 
                             <Field
-                                label="Repetir nueva contraseña"
+                                label={t('Repetir nueva contraseña')}
                                 error={password.errors.password_confirmation}
                             >
                                 <div className="relative">
@@ -233,7 +273,7 @@ export default function Profile({ user }: Props) {
                                         size={15}
                                         className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-black/30"
                                     />
-                                    <input
+                                    <NativeInput
                                         type="password"
                                         value={
                                             password.data.password_confirmation
@@ -245,14 +285,16 @@ export default function Profile({ user }: Props) {
                                             )
                                         }
                                         className={`${inputClass} pl-9`}
-                                        placeholder="Repite la nueva contraseña"
+                                        placeholder={t(
+                                            'Repite la nueva contraseña',
+                                        )}
                                         autoComplete="new-password"
                                     />
                                 </div>
                             </Field>
 
                             <div className="flex items-end">
-                                <button
+                                <NativeButton
                                     type="submit"
                                     disabled={
                                         password.processing ||
@@ -269,8 +311,8 @@ export default function Profile({ user }: Props) {
                                     ) : (
                                         <KeyRound size={15} />
                                     )}
-                                    Actualizar contraseña
-                                </button>
+                                    {t('Actualizar contraseña')}{' '}
+                                </NativeButton>
                             </div>
                         </form>
                     </section>
@@ -289,6 +331,8 @@ function Field({
     error?: string;
     children: ReactNode;
 }) {
+    const { t } = useTranslation();
+
     return (
         <label className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold tracking-widest text-black/40 uppercase">
@@ -297,7 +341,7 @@ function Field({
             {children}
             {error && (
                 <span className="text-xs font-medium text-red-600">
-                    {error}
+                    {t(error)}
                 </span>
             )}
         </label>

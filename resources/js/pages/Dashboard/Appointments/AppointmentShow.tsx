@@ -2,22 +2,36 @@ import { Link, usePoll } from '@inertiajs/react';
 import { ArrowLeft, Clock, Phone, Scissors, UserRound } from 'lucide-react';
 import { route } from 'ziggy-js';
 import AppointmentActions from '@/Components/Appointments/AppointmentActions';
+import CompleteAppointment from '@/Components/Appointments/CompleteAppointment';
 import StatusBadge from '@/Components/Appointments/StatusBadge';
+import LoyaltyCard from '@/Components/LoyaltyCard';
+import { Table, Card } from '@/Components/Watermelon';
 import AppLayout from '@/Layouts/AppLayout';
+import { useTranslation } from '@/lib/i18n';
 import {
     POLL_INTERVAL_MS,
     formatDate,
     formatMoney,
     formatTime,
 } from '@/lib/utils';
-import type { Appointment } from '@/types';
+import type { Appointment, Loyalty } from '@/types';
 
 type Props = {
     appointment: Appointment;
+    loyalty: Loyalty;
+    canComplete: boolean;
 };
 
-export default function AppointmentShow({ appointment }: Props) {
-    usePoll(POLL_INTERVAL_MS, { only: ['appointment'] });
+export default function AppointmentShow({
+    appointment,
+    loyalty,
+    canComplete,
+}: Props) {
+    const { t, intlLocale } = useTranslation();
+
+    usePoll(POLL_INTERVAL_MS, {
+        only: ['appointment', 'loyalty', 'canComplete'],
+    });
 
     const services = appointment.services ?? [];
     const totalDuration = appointment.total_duration;
@@ -36,13 +50,14 @@ export default function AppointmentShow({ appointment }: Props) {
                     className="inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.15em] text-black/40 uppercase transition-colors duration-150 hover:text-black"
                 >
                     <ArrowLeft size={12} />
-                    Citas
+                    {t('Citas')}{' '}
                 </Link>
 
                 <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
                     <div>
                         <h1 className="text-4xl font-bold tracking-tight text-black md:text-5xl">
-                            Cita #{appointment.id}
+                            {t('Cita #')}
+                            {appointment.id}
                         </h1>
                         <p className="mt-2 flex items-center gap-2 text-lg font-semibold tracking-tight text-black/70">
                             <StatusBadge status={appointment.status} />
@@ -57,28 +72,32 @@ export default function AppointmentShow({ appointment }: Props) {
                     <div className="flex flex-col gap-8 md:col-span-2">
                         <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                             <h3 className="text-xs font-semibold tracking-widest text-black/40 uppercase">
-                                Detalles
+                                {t('Detalles')}{' '}
                             </h3>
 
                             <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
                                 <div>
                                     <dt className="flex items-center gap-1.5 text-xs font-medium text-black/40">
                                         <Clock size={13} />
-                                        Fecha y hora
+                                        {t('Fecha y hora')}{' '}
                                     </dt>
                                     <dd className="mt-1 text-lg font-bold tracking-tight text-black">
-                                        {formatDate(appointment.starts_at)} ·{' '}
-                                        {formatTime(appointment.starts_at)}
+                                        {formatDate(
+                                            appointment.starts_at,
+                                            intlLocale,
+                                        )}{' '}
+                                        · {formatTime(appointment.starts_at)}
                                     </dd>
                                     <dd className="text-sm text-black/45">
-                                        {totalDuration} min de servicio
+                                        {totalDuration}{' '}
+                                        {t('min de servicio')}{' '}
                                     </dd>
                                 </div>
 
                                 <div>
                                     <dt className="flex items-center gap-1.5 text-xs font-medium text-black/40">
                                         <UserRound size={13} />
-                                        Barbero
+                                        {t('Barbero')}{' '}
                                     </dt>
                                     <dd className="mt-1 text-lg font-bold tracking-tight text-black">
                                         {appointment.worker?.name}
@@ -92,7 +111,7 @@ export default function AppointmentShow({ appointment }: Props) {
                                 <div>
                                     <dt className="flex items-center gap-1.5 text-xs font-medium text-black/40">
                                         <UserRound size={13} />
-                                        Cliente
+                                        {t('Cliente')}{' '}
                                     </dt>
                                     <dd className="mt-1 text-lg font-bold tracking-tight text-black">
                                         {appointment.user?.name}
@@ -105,17 +124,19 @@ export default function AppointmentShow({ appointment }: Props) {
 
                                 <div>
                                     <dt className="text-xs font-medium text-black/40">
-                                        Estado
+                                        {t('Estado')}{' '}
                                     </dt>
                                     <dd className="mt-1 text-lg font-bold tracking-tight text-black">
                                         {appointment.status === 'pending' &&
-                                            'Pendiente de confirmación'}
+                                            t('Pendiente de confirmación')}
                                         {appointment.status === 'proposed' &&
-                                            'Nueva hora propuesta'}
+                                            t('Nueva hora propuesta')}
                                         {appointment.status === 'confirmed' &&
-                                            'Confirmada'}
+                                            t('Confirmada')}
                                         {appointment.status === 'cancelled' &&
-                                            'Cancelada'}
+                                            t('Cancelada')}
+                                        {appointment.status === 'completed' &&
+                                            t('Completada')}
                                     </dd>
                                 </div>
                             </dl>
@@ -127,10 +148,11 @@ export default function AppointmentShow({ appointment }: Props) {
                                             <strong>
                                                 {appointment.proposer.name}
                                             </strong>{' '}
-                                            propuso la hora{' '}
+                                            {t('propuso la hora')}{' '}
                                             <strong>
                                                 {formatDate(
                                                     appointment.proposed_starts_at,
+                                                    intlLocale,
                                                 )}{' '}
                                                 ·{' '}
                                                 {formatTime(
@@ -139,7 +161,9 @@ export default function AppointmentShow({ appointment }: Props) {
                                             </strong>
                                             .{' '}
                                             {appointment.proposed_by !== null &&
-                                                'La otra parte puede confirmarla, rechazarla o proponer otra.'}
+                                                t(
+                                                    'La otra parte puede confirmarla, rechazarla o proponer otra.',
+                                                )}
                                         </p>
                                     </div>
                                 )}
@@ -148,7 +172,7 @@ export default function AppointmentShow({ appointment }: Props) {
                                 appointment.canceller && (
                                     <div className="mt-6 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-900">
                                         <p>
-                                            Cita cancelada por{' '}
+                                            {t('Cita cancelada por')}{' '}
                                             <strong>
                                                 {appointment.canceller.name}
                                             </strong>
@@ -162,18 +186,19 @@ export default function AppointmentShow({ appointment }: Props) {
                         <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
                             <h3 className="flex items-center gap-1.5 px-6 pt-6 text-xs font-semibold tracking-widest text-black/40 uppercase">
                                 <Scissors size={13} />
-                                Servicios ({services.length})
+                                {t('Servicios (')}
+                                {services.length})
                             </h3>
 
                             <div className="mt-4 overflow-x-auto">
-                                <table className="w-full text-left">
+                                <Table className="w-full text-left">
                                     <thead>
                                         <tr className="border-b border-gray-100 text-xs font-semibold tracking-widest text-black/35 uppercase">
                                             <th className="px-6 py-3">
-                                                Servicio
+                                                {t('Servicio')}{' '}
                                             </th>
                                             <th className="px-6 py-3 text-right">
-                                                Precio al momento
+                                                {t('Precio al momento')}{' '}
                                             </th>
                                         </tr>
                                     </thead>
@@ -188,30 +213,35 @@ export default function AppointmentShow({ appointment }: Props) {
                                                         {service.pivot.name}
                                                     </p>
                                                     <p className="text-sm text-black/45">
-                                                        {service.duration} min
+                                                        {service.duration}{' '}
+                                                        {t('min')}{' '}
                                                     </p>
                                                 </td>
                                                 <td className="px-6 py-4 text-right font-extrabold tracking-tight text-black">
                                                     {formatMoney(
                                                         service.pivot.price,
+                                                        intlLocale,
                                                     )}
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
-                                </table>
+                                </Table>
                             </div>
 
                             <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
                                 <span className="text-xs font-semibold tracking-widest text-black/40 uppercase">
-                                    Total
+                                    {t('Total')}{' '}
                                 </span>
                                 <span className="flex items-center gap-2">
                                     <span className="text-sm text-black/45">
-                                        {totalDuration} min
+                                        {totalDuration} {t('min')}{' '}
                                     </span>
                                     <span className="text-2xl font-extrabold tracking-tight text-black">
-                                        {formatMoney(appointment.total_price)}
+                                        {formatMoney(
+                                            appointment.total_price,
+                                            intlLocale,
+                                        )}
                                     </span>
                                 </span>
                             </div>
@@ -220,32 +250,69 @@ export default function AppointmentShow({ appointment }: Props) {
 
                     {/* Resumen lateral */}
                     <aside className="flex flex-col gap-6">
-                        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                        {canComplete && (
+                            <CompleteAppointment
+                                appointment={appointment}
+                                loyalty={loyalty}
+                            />
+                        )}
+                        {appointment.loyalty_reward_name && (
+                            <div className="rounded-2xl border border-green-200 bg-green-50 p-5 text-sm text-green-900">
+                                <p className="font-semibold">
+                                    {t('Premio de fidelidad canjeado')}{' '}
+                                </p>
+                                <p className="mt-2">
+                                    {appointment.loyalty_reward_name}
+                                    {t(': gratis.')}{' '}
+                                </p>
+                                <p className="mt-1">
+                                    {t('Descuento aplicado:')}{' '}
+                                    {formatMoney(
+                                        appointment.loyalty_discount,
+                                        intlLocale,
+                                    )}
+                                </p>
+                            </div>
+                        )}
+                        <Card className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
                             <h3 className="text-xs font-semibold tracking-widest text-black/40 uppercase">
-                                Resumen
+                                {t('Resumen')}{' '}
                             </h3>
                             <ul className="mt-4 flex flex-col gap-3 text-sm text-black/60">
                                 <li className="flex items-center justify-between">
-                                    <span>Duración total</span>
+                                    <span>{t('Duración total')}</span>
                                     <strong className="text-black">
-                                        {totalDuration} min
+                                        {totalDuration} {t('min')}{' '}
                                     </strong>
                                 </li>
                                 <li className="flex items-center justify-between">
-                                    <span>Total a pagar</span>
+                                    <span>{t('Total a pagar')}</span>
                                     <strong className="text-black">
-                                        {formatMoney(appointment.total_price)}
+                                        {formatMoney(
+                                            appointment.total_price,
+                                            intlLocale,
+                                        )}
                                     </strong>
                                 </li>
                                 <li className="flex items-center justify-between">
-                                    <span>Creada</span>
+                                    <span>{t('Creada')}</span>
                                     <span className="text-black/45">
-                                        {formatDate(appointment.created_at)}
+                                        {formatDate(
+                                            appointment.created_at,
+                                            intlLocale,
+                                        )}
                                     </span>
                                 </li>
                             </ul>
-                        </div>
+                        </Card>
                     </aside>
+                </div>
+                <div className="mt-8">
+                    <LoyaltyCard
+                        loyalty={loyalty}
+                        showLink={false}
+                        customerName={appointment.user?.name}
+                    />
                 </div>
             </div>
         </AppLayout>

@@ -6,18 +6,21 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\LogoutController;
+use App\Http\Controllers\LoyaltyController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\PushSubscriptionsController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\WorkerPortfolioController;
 use App\Http\Controllers\WorkersController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicSiteController::class, 'home'])->name('home');
 Route::get('servicios', [PublicSiteController::class, 'services'])->name('public.services');
 Route::get('barberos', [PublicSiteController::class, 'barbers'])->name('public.barbers');
+Route::get('barberos/{worker}', [WorkerPortfolioController::class, 'show'])->name('public.worker');
 Route::get('como-funciona', [PublicSiteController::class, 'experience'])->name('public.experience');
 
 Route::middleware('guest')->group(function () {
@@ -40,12 +43,14 @@ Route::post('logout', [LogoutController::class, 'store'])->middleware('auth')->n
 
 Route::prefix('dashboard')->scopeBindings()->middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('loyalty', [LoyaltyController::class, 'index'])->name('loyalty');
     // Administradores
     Route::prefix('workers')->group(function () {
         Route::get('/', [WorkersController::class, 'index'])->name('workers');
         Route::get('create', [WorkersController::class, 'create'])->name('workers.create');
         Route::post('/', [WorkersController::class, 'store'])->name('workers.store');
         Route::prefix('{worker}')->group(function () {
+            Route::put('portfolio', [WorkerPortfolioController::class, 'update'])->name('workers.portfolio');
             // Desde Show se puede actualizar un trabajdor
             Route::get('/', [WorkersController::class, 'show'])->name('workers.show');
             Route::put('/', [WorkersController::class, 'update'])->name('workers.update');
@@ -74,6 +79,7 @@ Route::prefix('dashboard')->scopeBindings()->middleware('auth')->group(function 
         Route::post('/', [AppointmentsController::class, 'store'])->name('appointments.store');
         Route::prefix('{appointment}')->group(function () {
             Route::get('/', [AppointmentsController::class, 'show'])->name('appointments.show');
+            Route::post('complete', [AppointmentsController::class, 'complete'])->name('appointments.complete');
             Route::post('confirm', [AppointmentsController::class, 'confirm'])->name('appointments.confirm');
             Route::post('reject', [AppointmentsController::class, 'reject'])->name('appointments.reject');
             Route::post('propose', [AppointmentsController::class, 'propose'])->name('appointments.propose');
@@ -108,6 +114,7 @@ Route::prefix('dashboard')->scopeBindings()->middleware('auth')->group(function 
 
     // Mi cuenta (perfil)
     Route::prefix('profile')->group(function () {
+        Route::put('portfolio', [WorkerPortfolioController::class, 'updateOwn'])->name('profile.portfolio');
         Route::get('/', [ProfileController::class, 'index'])->name('profile');
         Route::put('/', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('password', [ProfileController::class, 'password'])->name('profile.password');

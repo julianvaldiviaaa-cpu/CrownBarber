@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { ArrowRight, CalendarPlus, Scissors } from 'lucide-react';
 import { route } from 'ziggy-js';
 import AppointmentsSection from '@/Components/Appointments/AppointmentsSection';
+import { useTranslation } from '@/lib/i18n';
 import type { Appointment, Paginated } from '@/types';
 
 type Props = {
@@ -9,6 +10,8 @@ type Props = {
 };
 
 export default function UserDashboard({ appointments }: Props) {
+    const { t } = useTranslation();
+
     return (
         <div className="mt-10 flex w-full flex-col gap-10">
             {/* Banner de agendar */}
@@ -19,10 +22,12 @@ export default function UserDashboard({ appointments }: Props) {
                     </div>
                     <div>
                         <p className="text-xl font-bold tracking-tight text-white">
-                            ¿Listo para un corte?
+                            {t('¿Listo para un corte?')}{' '}
                         </p>
                         <p className="text-sm text-white/60">
-                            Elige tus servicios, la hora y tu barbero favorito.
+                            {t(
+                                'Elige tus servicios, la hora y tu barbero favorito.',
+                            )}{' '}
                         </p>
                     </div>
                 </div>
@@ -31,7 +36,7 @@ export default function UserDashboard({ appointments }: Props) {
                     className="group flex shrink-0 items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold tracking-tight text-black transition-transform duration-150 active:scale-[0.97]"
                 >
                     <CalendarPlus size={17} />
-                    Agendar cita
+                    {t('Agendar cita')}{' '}
                     <ArrowRight
                         size={15}
                         className="transition-transform duration-300 group-hover:translate-x-0.5"
@@ -42,13 +47,13 @@ export default function UserDashboard({ appointments }: Props) {
             <div>
                 <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold tracking-tight text-black">
-                        Mis citas
+                        {t('Mis citas')}{' '}
                     </h2>
                     <Link
                         href={route('appointments')}
                         className="text-sm font-semibold tracking-tight text-black/50 transition-colors hover:text-black"
                     >
-                        Ver todas →
+                        {t('Ver todas →')}{' '}
                     </Link>
                 </div>
                 <div className="mt-5">

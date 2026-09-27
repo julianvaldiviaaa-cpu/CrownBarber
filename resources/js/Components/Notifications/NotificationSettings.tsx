@@ -5,6 +5,8 @@ import {
     store,
     destroy,
 } from '@/actions/App/Http/Controllers/PushSubscriptionsController';
+import { NativeButton, NativeInput } from '@/Components/Watermelon';
+import { useTranslation, translateCurrent } from '@/lib/i18n';
 import {
     playNotificationSound,
     unlockNotificationSound,
@@ -28,7 +30,9 @@ async function saveSubscription(url: string, method: string, data?: unknown) {
 
     if (!response.ok) {
         throw new Error(
-            'No se pudo guardar la configuración. Inténtalo de nuevo.',
+            translateCurrent(
+                'No se pudo guardar la configuración. Inténtalo de nuevo.',
+            ),
         );
     }
 }
@@ -38,6 +42,8 @@ export default function NotificationSettings({
 }: {
     onDone?: () => void;
 }) {
+    const { t } = useTranslation();
+
     const { auth } = usePage().props;
     const [busy, setBusy] = useState(false);
     const [message, setMessage] = useState('');
@@ -57,7 +63,9 @@ export default function NotificationSettings({
         try {
             if (!supported || !auth?.pushPublicKey) {
                 throw new Error(
-                    'Las notificaciones del navegador aún no están disponibles.',
+                    t(
+                        'Las notificaciones del navegador aún no están disponibles.',
+                    ),
                 );
             }
 
@@ -66,8 +74,12 @@ export default function NotificationSettings({
             if (permission !== 'granted') {
                 throw new Error(
                     permission === 'denied'
-                        ? 'Chrome bloqueó los avisos. Permítelos en la configuración de este sitio y vuelve a intentarlo.'
-                        : 'No activaste los avisos. Puedes intentarlo cuando quieras.',
+                        ? t(
+                              'Chrome bloqueó los avisos. Permítelos en la configuración de este sitio y vuelve a intentarlo.',
+                          )
+                        : t(
+                              'No activaste los avisos. Puedes intentarlo cuando quieras.',
+                          ),
                 );
             }
 
@@ -95,12 +107,12 @@ export default function NotificationSettings({
             });
             await saveSubscription(store.url(), 'POST', subscription.toJSON());
             router.reload({ only: ['auth'], onSuccess: () => onDone?.() });
-            setMessage('Notificaciones activadas en este navegador.');
+            setMessage(t('Notificaciones activadas en este navegador.'));
         } catch (error) {
             setMessage(
                 error instanceof Error
                     ? error.message
-                    : 'No se pudieron activar los avisos.',
+                    : t('No se pudieron activar los avisos.'),
             );
         } finally {
             setBusy(false);
@@ -122,12 +134,12 @@ export default function NotificationSettings({
             }
 
             router.reload({ only: ['auth'] });
-            setMessage('Notificaciones desactivadas en este navegador.');
+            setMessage(t('Notificaciones desactivadas en este navegador.'));
         } catch (error) {
             setMessage(
                 error instanceof Error
                     ? error.message
-                    : 'No se pudieron desactivar los avisos.',
+                    : t('No se pudieron desactivar los avisos.'),
             );
         } finally {
             setBusy(false);
@@ -137,12 +149,12 @@ export default function NotificationSettings({
     return (
         <div className="flex flex-col gap-4">
             <p className="text-sm text-black/60">
-                Recibe solicitudes, confirmaciones, cambios de hora y
-                cancelaciones con los datos de tu cita, incluso con la web
-                cerrada.
+                {t(
+                    'Recibe solicitudes, confirmaciones, cambios de hora y cancelaciones con los datos de tu cita, incluso con la web cerrada.',
+                )}{' '}
             </p>
             <label className="flex items-center gap-3 text-sm font-medium">
-                <input
+                <NativeInput
                     type="checkbox"
                     checked={auth?.user.notification_sound ?? true}
                     onChange={(event) => {
@@ -154,9 +166,9 @@ export default function NotificationSettings({
                         );
                     }}
                 />
-                Sonido de campanita con la web abierta
+                {t('Sonido de campanita con la web abierta')}{' '}
             </label>
-            <button
+            <NativeButton
                 type="button"
                 onClick={() => {
                     unlockNotificationSound();
@@ -164,35 +176,38 @@ export default function NotificationSettings({
                 }}
                 className="self-start text-sm underline"
             >
-                Probar sonido
-            </button>
+                {t('Probar sonido')}{' '}
+            </NativeButton>
             {!supported && (
                 <p className="text-sm text-black/60">
-                    Abre el sitio por HTTPS en un navegador compatible para
-                    activar los avisos.
+                    {t(
+                        'Abre el sitio por HTTPS en un navegador compatible para activar los avisos.',
+                    )}{' '}
                 </p>
             )}
             {supported && !auth?.pushPublicKey && (
                 <p className="text-sm text-black/60">
-                    Los avisos del navegador están pendientes de configuración
-                    en el servidor.
+                    {t(
+                        'Los avisos del navegador están pendientes de configuración en el servidor.',
+                    )}{' '}
                 </p>
             )}
             {blocked && (
                 <p className="text-sm text-black/60">
-                    Los avisos están bloqueados en los permisos de este sitio.
-                    Puedes permitirlos desde la configuración de Chrome.
+                    {t(
+                        'Los avisos están bloqueados en los permisos de este sitio. Puedes permitirlos desde la configuración de Chrome.',
+                    )}{' '}
                 </p>
             )}
             <p className="text-sm">
-                Estado:{' '}
+                {t('Estado:')}{' '}
                 {auth?.pushEnabled && !blocked
-                    ? 'activadas en este navegador'
-                    : 'desactivadas en este navegador'}
+                    ? t('activadas en este navegador')
+                    : t('desactivadas en este navegador')}
                 .
             </p>
             <div className="flex flex-wrap gap-3">
-                <button
+                <NativeButton
                     type="button"
                     disabled={
                         busy || !supported || !auth?.pushPublicKey || blocked
@@ -201,25 +216,25 @@ export default function NotificationSettings({
                     className="rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
                 >
                     {busy
-                        ? 'Guardando…'
+                        ? t('Guardando…')
                         : auth?.pushEnabled
-                          ? 'Reactivar avisos'
-                          : 'Activar notificaciones'}
-                </button>
+                          ? t('Reactivar avisos')
+                          : t('Activar notificaciones')}
+                </NativeButton>
                 {auth?.pushEnabled && (
-                    <button
+                    <NativeButton
                         type="button"
                         disabled={busy}
                         onClick={() => void disable()}
                         className="rounded-full border border-gray-300 px-5 py-2.5 text-sm font-semibold"
                     >
-                        Desactivar en este navegador
-                    </button>
+                        {t('Desactivar en este navegador')}{' '}
+                    </NativeButton>
                 )}
             </div>
             {message && (
                 <p role="status" className="text-sm">
-                    {message}
+                    {t(message)}
                 </p>
             )}
         </div>

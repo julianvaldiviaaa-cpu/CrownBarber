@@ -1,7 +1,5 @@
 import {
-    Button,
     FieldError,
-    Input,
     Link,
     Modal,
     TextField,
@@ -13,7 +11,15 @@ import type { SyntheticEvent } from 'react';
 import { useEffect, useRef } from 'react';
 import { route } from 'ziggy-js';
 import ConfirmModal from '@/Components/ConfirmModal';
+import {
+    Button,
+    Input,
+    NativeButton,
+    Textarea,
+    Card,
+} from '@/Components/Watermelon';
 import AppLayout from '@/Layouts/AppLayout';
+import { useTranslation } from '@/lib/i18n';
 import type { Service } from '@/types';
 
 type Props = {
@@ -25,6 +31,8 @@ const editableField =
     'border-b-2 border-transparent bg-transparent outline-none transition-colors duration-150 hover:border-dashed hover:border-gray-300 focus:border-solid focus:border-black';
 
 export default function ServiceShow({ service }: Props) {
+    const { t } = useTranslation();
+
     const {
         data,
         setData,
@@ -39,6 +47,7 @@ export default function ServiceShow({ service }: Props) {
         description: service.description ?? '',
         price: service.price ?? 0,
         duration: service.duration ?? 0,
+        loyalty_reward_type: service.loyalty_reward_type ?? '',
     });
 
     const handleSubmit = (e: SyntheticEvent) => {
@@ -123,7 +132,7 @@ export default function ServiceShow({ service }: Props) {
                     className="inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.15em] text-black/40 uppercase transition-colors duration-150 hover:text-black"
                 >
                     <ArrowLeft size={12} />
-                    Servicios
+                    {t('Servicios')}{' '}
                 </Link>
 
                 {/* Header — título a la izquierda + estado a la derecha, no centrado */}
@@ -142,20 +151,20 @@ export default function ServiceShow({ service }: Props) {
                         className="block max-w-xl min-w-0 flex-1"
                     >
                         <Input
-                            placeholder="Nombre del servicio"
+                            placeholder={t('Nombre del servicio')}
                             className={`w-full px-0 py-1 text-4xl font-bold tracking-tight text-black md:text-5xl ${editableField}`}
                         />
                         <FieldError className="mt-2 block text-sm font-medium text-red-500">
-                            {errors.name}
+                            {t(errors.name)}
                         </FieldError>
                     </TextField>
 
-                    <button
+                    <NativeButton
                         type="button"
                         onClick={() =>
                             handleStatusChange(service, !service.active)
                         }
-                        title="Cambiar estado del servicio"
+                        title={t('Cambiar estado del servicio')}
                         className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold tracking-tight transition-colors duration-150 ${
                             service.active
                                 ? 'border-green-200 bg-green-50 text-green-700 hover:border-green-300'
@@ -167,8 +176,8 @@ export default function ServiceShow({ service }: Props) {
                                 service.active ? 'bg-green-500' : 'bg-red-500'
                             }`}
                         />
-                        {service.active ? 'Activo' : 'No Activo'}
-                    </button>
+                        {service.active ? t('Activo') : t('No Activo')}
+                    </NativeButton>
                 </div>
 
                 {/* Contenido distribuido: descripción a la izquierda, detalles + acciones a la derecha */}
@@ -176,7 +185,7 @@ export default function ServiceShow({ service }: Props) {
                     {/* Descripción */}
                     <div className="md:col-span-2">
                         <h3 className="text-xs font-semibold tracking-widest text-black/40 uppercase">
-                            Descripción
+                            {t('Descripción')}{' '}
                         </h3>
                         <TextField
                             name="description"
@@ -191,7 +200,7 @@ export default function ServiceShow({ service }: Props) {
                             isInvalid={!!errors.description}
                             className="mt-3 block"
                         >
-                            <textarea
+                            <Textarea
                                 value={data.description}
                                 onChange={(e) => {
                                     setData('description', e.target.value);
@@ -201,23 +210,67 @@ export default function ServiceShow({ service }: Props) {
                                     }
                                 }}
                                 rows={7}
-                                placeholder="Describe en qué consiste el servicio…"
+                                placeholder={t(
+                                    'Describe en qué consiste el servicio…',
+                                )}
                                 className={`-mx-3 w-full resize-none rounded-md px-3 py-2 text-lg/8 tracking-tight text-black/70 hover:bg-black/[0.02] focus:bg-black/[0.02] ${editableField}`}
                             />
                             <FieldError className="mt-2 block text-sm font-medium text-red-500">
-                                {errors.description}
+                                {t(errors.description)}
                             </FieldError>
                         </TextField>
                     </div>
 
                     {/* Panel lateral: detalles + zona de peligro */}
                     <div className="flex flex-col gap-6 md:col-span-1">
-                        <div className="rounded-2xl border border-gray-200 p-6 shadow-sm">
+                        <Card className="rounded-2xl border border-gray-200 p-6 shadow-sm">
                             <h3 className="text-xs font-semibold tracking-widest text-black/40 uppercase">
-                                Detalles
+                                {t('Detalles')}{' '}
                             </h3>
 
                             <div className="mt-4 flex flex-col gap-4">
+                                <div className="col-span-full flex flex-col gap-2">
+                                    <label
+                                        htmlFor="loyalty_reward_type"
+                                        className="text-sm font-medium"
+                                    >
+                                        {t('Premio de fidelidad')}{' '}
+                                    </label>
+                                    <select
+                                        id="loyalty_reward_type"
+                                        value={data.loyalty_reward_type}
+                                        onChange={(event) =>
+                                            setData(
+                                                'loyalty_reward_type',
+                                                event.target.value,
+                                            )
+                                        }
+                                        className="wm-input min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-black"
+                                    >
+                                        <option value="">
+                                            {t('No participa como premio')}{' '}
+                                        </option>
+                                        <option value="haircut">
+                                            {t('Corte de cabello gratis')}{' '}
+                                        </option>
+                                        <option value="facial">
+                                            {t('Facial gratis')}{' '}
+                                        </option>
+                                    </select>
+                                    <p className="text-xs opacity-60">
+                                        {t(
+                                            'Habilita cortes de cabello o faciales. Se descuenta un servicio al canjear la tarjeta.',
+                                        )}{' '}
+                                    </p>
+                                    {errors.loyalty_reward_type && (
+                                        <p
+                                            role="alert"
+                                            className="text-sm text-red-500"
+                                        >
+                                            {t(errors.loyalty_reward_type)}
+                                        </p>
+                                    )}
+                                </div>
                                 <TextField
                                     name="price"
                                     type="number"
@@ -234,7 +287,7 @@ export default function ServiceShow({ service }: Props) {
                                     <div className="flex items-center justify-between gap-2">
                                         <span className="flex items-center gap-1.5 text-sm text-black/50">
                                             <DollarSign size={14} />
-                                            Precio
+                                            {t('Precio')}{' '}
                                         </span>
                                         <Input
                                             min={0}
@@ -243,7 +296,7 @@ export default function ServiceShow({ service }: Props) {
                                         />
                                     </div>
                                     <FieldError className="mt-1 block text-right text-xs font-medium text-red-500">
-                                        {errors.price}
+                                        {t(errors.price)}
                                     </FieldError>
                                 </TextField>
 
@@ -265,7 +318,7 @@ export default function ServiceShow({ service }: Props) {
                                     <div className="flex items-center justify-between gap-2">
                                         <span className="flex items-center gap-1.5 text-sm text-black/50">
                                             <Clock size={14} />
-                                            Duración
+                                            {t('Duración')}{' '}
                                         </span>
                                         <div className="flex items-baseline gap-1">
                                             <Input
@@ -273,55 +326,56 @@ export default function ServiceShow({ service }: Props) {
                                                 className={`[field-sizing:content] w-10 px-0 py-0.5 text-right text-lg font-bold ${editableField}`}
                                             />
                                             <span className="text-sm text-black/40">
-                                                min
+                                                {t('min')}{' '}
                                             </span>
                                         </div>
                                     </div>
                                     <FieldError className="mt-1 block text-right text-xs font-medium text-red-500">
-                                        {errors.duration}
+                                        {t(errors.duration)}
                                     </FieldError>
                                 </TextField>
                             </div>
-                        </div>
+                        </Card>
 
                         {/* Zona de peligro */}
                         <div className="rounded-2xl border border-red-100 bg-red-50/40 p-6">
                             <h3 className="text-xs font-semibold tracking-widest text-red-400 uppercase">
-                                Eliminar servicio
+                                {t('Eliminar servicio')}{' '}
                             </h3>
                             <p className="mt-2 text-sm text-black/50">
-                                Al eliminar este servicio ya no podrás ofrecerlo
-                                a tus clientes. Esta acción no se puede
-                                deshacer.
+                                {t(
+                                    'Al eliminar este servicio ya no podrás ofrecerlo a tus clientes. Esta acción no se puede deshacer.',
+                                )}{' '}
                             </p>
 
                             <Modal>
                                 <Button className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-semibold tracking-tight text-red-600 transition-colors duration-150 hover:bg-red-50">
                                     <Trash2 size={14} />
-                                    Eliminar servicio
+                                    {t('Eliminar servicio')}{' '}
                                 </Button>
                                 <Modal.Backdrop>
                                     <Modal.Container>
-                                        <Modal.Dialog>
+                                        <Modal.Dialog className="wm-overlay">
                                             <Modal.CloseTrigger />
                                             <Modal.Header>
                                                 <Modal.Icon>
                                                     <Trash2 />
                                                 </Modal.Icon>
                                                 <Modal.Heading>
-                                                    ¿Eliminar este servicio?
+                                                    {t(
+                                                        '¿Eliminar este servicio?',
+                                                    )}{' '}
                                                 </Modal.Heading>
                                             </Modal.Header>
                                             <Modal.Body>
                                                 <p>
-                                                    Si eliminas{' '}
+                                                    {t('Si eliminas')}{' '}
                                                     <strong>
                                                         {service.name}
                                                     </strong>
-                                                    , ya no podrás ofrecerlo a
-                                                    ninguno de tus clientes.
-                                                    Esta acción no se puede
-                                                    deshacer.
+                                                    {t(
+                                                        ', ya no podrás ofrecerlo a ninguno de tus clientes. Esta acción no se puede deshacer.',
+                                                    )}{' '}
                                                 </p>
                                             </Modal.Body>
                                             <Modal.Footer className="flex items-center justify-center gap-3">
@@ -329,13 +383,13 @@ export default function ServiceShow({ service }: Props) {
                                                     slot="close"
                                                     className="w-full rounded-full border border-gray-200 py-2.5 text-sm font-semibold tracking-tight text-black/70"
                                                 >
-                                                    Cancelar
+                                                    {t('Cancelar')}{' '}
                                                 </Button>
                                                 <Button
                                                     onClick={handleDelete}
                                                     className="w-full rounded-full bg-red-600 py-2.5 text-sm font-semibold tracking-tight text-white hover:bg-red-700"
                                                 >
-                                                    Eliminar
+                                                    {t('Eliminar')}{' '}
                                                 </Button>
                                             </Modal.Footer>
                                         </Modal.Dialog>
@@ -358,31 +412,33 @@ export default function ServiceShow({ service }: Props) {
             >
                 <div className="flex items-center gap-4 rounded-full border border-gray-700 bg-black px-5 py-2.5 shadow-xl shadow-black/30">
                     <p className="text-sm font-medium tracking-tight text-gray-300">
-                        Cambios sin guardar
+                        {t('Cambios sin guardar')}{' '}
                     </p>
-                    <button
+                    <NativeButton
                         type="button"
                         onClick={() => reset()}
                         className="text-sm font-medium tracking-tight text-white/40 transition-colors duration-150 hover:text-white"
                     >
-                        Descartar
-                    </button>
-                    <button
+                        {t('Descartar')}{' '}
+                    </NativeButton>
+                    <NativeButton
                         type="submit"
                         form="service-form"
                         disabled={processing}
                         className="rounded-full bg-white px-5 py-2 text-sm font-semibold tracking-tight text-black transition-transform duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        {processing ? 'Guardando…' : 'Guardar cambios'}
-                    </button>
+                        {processing ? t('Guardando…') : t('Guardar cambios')}
+                    </NativeButton>
                 </div>
             </div>
 
             <ConfirmModal
                 state={leaveState}
-                heading="Cambios sin guardar"
-                message="¿Salir de todos modos? Los cambios que no hayas guardado se perderán."
-                confirmLabel="Salir sin guardar"
+                heading={t('Cambios sin guardar')}
+                message={t(
+                    '¿Salir de todos modos? Los cambios que no hayas guardado se perderán.',
+                )}
+                confirmLabel={t('Salir sin guardar')}
                 onConfirm={confirmLeave}
             />
         </AppLayout>

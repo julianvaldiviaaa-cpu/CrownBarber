@@ -63,6 +63,7 @@ class WorkersController extends Controller
             'Dashboard/Roles/Admin/Workers/WorkerShow',
             [
                 'worker' => $worker,
+                'portfolio' => $worker->publicWorkerProfile(),
             ]
         );
     }

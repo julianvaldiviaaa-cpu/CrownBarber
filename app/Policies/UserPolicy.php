@@ -7,6 +7,12 @@ use App\UserRoles;
 
 class UserPolicy
 {
+    public function updatePortfolio(User $user, User $worker): bool
+    {
+        return in_array($worker->role, [UserRoles::Worker, UserRoles::Admin], true)
+            && ($user->role === UserRoles::Admin || $user->id === $worker->id);
+    }
+
     /**
      * Determine whether the user can view any users.
      */

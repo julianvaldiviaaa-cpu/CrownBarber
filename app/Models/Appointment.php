@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -24,6 +25,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property Carbon|null $proposed_starts_at
  * @property int|null $proposed_by
  * @property int|null $cancelled_by
+ * @property Carbon|null $completed_at
+ * @property Carbon|null $loyalty_visit_date
+ * @property int|null $loyalty_reward_service_id
+ * @property string|null $loyalty_reward_name
+ * @property string $loyalty_discount
  * @property User $user
  * @property User $worker
  * @property User|null $proposer
@@ -40,16 +46,26 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'proposed_starts_at',
     'proposed_by',
     'cancelled_by',
+    'completed_at',
+    'loyalty_visit_date',
+    'loyalty_reward_service_id',
+    'loyalty_reward_name',
+    'loyalty_discount',
 ])]
 class Appointment extends Model
 {
     use HasFactory;
     use SoftDeletes;
 
+    protected $attributes = ['loyalty_discount' => 0];
+
     protected function casts(): array
     {
         return [
             'starts_at' => 'datetime',
+            'completed_at' => 'datetime',
+            'loyalty_visit_date' => 'date:Y-m-d',
+            'loyalty_discount' => 'decimal:2',
             'proposed_starts_at' => 'datetime',
             'status' => AppointmentStatus::class,
             'total_price' => 'decimal:2',
@@ -109,6 +125,8 @@ class Appointment extends Model
 
     /**
      * Servicios de la cita con el snapshot de precio/nombre al momento de agendar.
+     *
+     * @return BelongsToMany<Service, $this>
      */
     public function services(): BelongsToMany
     {

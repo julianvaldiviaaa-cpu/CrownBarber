@@ -7,7 +7,6 @@ use App\Models\Service;
 use App\Models\User;
 use App\UserRoles;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,7 +16,7 @@ class PublicSiteController extends Controller
     {
         return Inertia::render('welcome', [
             'services' => $this->servicesQuery()->take(4)->get(),
-            'barbers' => $this->barbersList()->take(4)->values(),
+            'barbers' => array_slice($this->barbersList(), 0, 4),
         ]);
     }
 
@@ -46,10 +45,10 @@ class PublicSiteController extends Controller
             ->select(['id', 'name', 'description', 'price', 'duration', 'slug']);
     }
 
-    /** @return Collection<int, User> */
-    private function barbersList(): Collection
+    /** @return list<array{id: int, name: string, specialty: ?string, description: ?string, profile_photo_url: string, cover_photo_url: string, gallery: array<int, array{id: string, url: string}>}> */
+    private function barbersList(): array
     {
-        return User::whereIn('role', [UserRoles::Worker, UserRoles::Admin])
-            ->orderBy('name')->get(['id', 'name']);
+        return array_values(User::whereIn('role', [UserRoles::Worker, UserRoles::Admin])
+            ->orderBy('name')->get()->map(fn (User $worker): array => $worker->publicWorkerProfile())->all());
     }
 }

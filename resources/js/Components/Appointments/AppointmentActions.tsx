@@ -3,6 +3,8 @@ import { Ban, Check, X } from 'lucide-react';
 import { route } from 'ziggy-js';
 import ProposeTimeModal from '@/Components/Appointments/ProposeTimeModal';
 import ConfirmModal from '@/Components/ConfirmModal';
+import { NativeButton } from '@/Components/Watermelon';
+import { useTranslation } from '@/lib/i18n';
 import type { Appointment } from '@/types';
 
 type Props = {
@@ -19,6 +21,8 @@ export default function AppointmentActions({
     appointment,
     compact = false,
 }: Props) {
+    const { t } = useTranslation();
+
     const { auth } = usePage().props;
     const user = auth?.user;
 
@@ -83,30 +87,32 @@ export default function AppointmentActions({
         <div className="flex flex-wrap items-center justify-end gap-2">
             {canRespond && (
                 <>
-                    <button
+                    <NativeButton
                         type="button"
                         onClick={confirm}
-                        title="Confirmar cita"
+                        title={t('Confirmar cita')}
                         className={`${buttonClass} border border-green-200 bg-green-50 text-green-700 transition-colors hover:bg-green-100`}
                     >
                         <Check size={15} />
-                        {!compact && 'Confirmar'}
-                    </button>
+                        {!compact && t('Confirmar')}
+                    </NativeButton>
                     <ProposeTimeModal
                         appointment={appointment}
                         compact={compact}
                     />
                     <ConfirmModal
-                        heading="¿Rechazar esta cita?"
-                        message="La cita quedará rechazada y la otra parte será notificada."
-                        confirmLabel="Sí, rechazar"
+                        heading={t('¿Rechazar esta cita?')}
+                        message={t(
+                            'La cita quedará rechazada y la otra parte será notificada.',
+                        )}
+                        confirmLabel={t('Sí, rechazar')}
                         onConfirm={reject}
-                        triggerAriaLabel="Rechazar cita"
+                        triggerAriaLabel={t('Rechazar cita')}
                         triggerClassName={destructiveTriggerClass}
                         triggerChildren={
                             <>
                                 <X size={15} />
-                                {!compact && 'Rechazar'}
+                                {!compact && t('Rechazar')}
                             </>
                         }
                     />
@@ -115,16 +121,18 @@ export default function AppointmentActions({
 
             {canCancel && (
                 <ConfirmModal
-                    heading="¿Cancelar esta cita?"
-                    message="La cita quedará cancelada y la otra parte será notificada."
-                    confirmLabel="Sí, cancelar"
+                    heading={t('¿Cancelar esta cita?')}
+                    message={t(
+                        'La cita quedará cancelada y la otra parte será notificada.',
+                    )}
+                    confirmLabel={t('Sí, cancelar')}
                     onConfirm={cancel}
-                    triggerAriaLabel="Cancelar cita"
+                    triggerAriaLabel={t('Cancelar cita')}
                     triggerClassName={destructiveTriggerClass}
                     triggerChildren={
                         <>
                             <Ban size={15} />
-                            {!compact && 'Cancelar cita'}
+                            {!compact && t('Cancelar cita')}
                         </>
                     }
                 />

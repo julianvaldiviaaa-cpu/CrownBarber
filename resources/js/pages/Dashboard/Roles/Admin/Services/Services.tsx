@@ -1,8 +1,9 @@
-import { Button } from '@heroui/react';
 import { Link, router } from '@inertiajs/react';
 import { ArrowUpRight, ChevronLeft, Clock, Plus, Scissors } from 'lucide-react';
 import { route } from 'ziggy-js';
+import { Button, Card } from '@/Components/Watermelon';
 import AppLayout from '@/Layouts/AppLayout';
+import { useTranslation } from '@/lib/i18n';
 import type { Paginated, Service } from '@/types';
 
 type Props = {
@@ -10,6 +11,8 @@ type Props = {
 };
 
 export default function Services({ services }: Props) {
+    const { t } = useTranslation();
+
     return (
         <AppLayout navbar="dashboard">
             <div className="mx-auto max-w-6xl px-6 py-16 md:py-20">
@@ -20,16 +23,16 @@ export default function Services({ services }: Props) {
                             onClick={() => router.get(route('dashboard'))}
                             className="mb-10 flex items-center justify-center gap-2 bg-black text-gray-300 transition-all duration-300 hover:gap-4"
                         >
-                            <ChevronLeft /> Dashboard
+                            <ChevronLeft /> {t('Dashboard')}{' '}
                         </Button>
                         <h1 className="text-4xl font-bold tracking-tight text-black md:text-5xl">
-                            Servicios
+                            {t('Servicios')}{' '}
                         </h1>
                         <p className="mt-2 text-sm font-medium tracking-tight text-black/40">
                             {services.total}{' '}
                             {services.total === 1
-                                ? 'servicio registrado'
-                                : 'servicios registrados'}
+                                ? t('servicio registrado')
+                                : t('servicios registrados')}
                         </p>
                     </div>
 
@@ -38,7 +41,7 @@ export default function Services({ services }: Props) {
                         className="group flex shrink-0 items-center gap-1.5 rounded-full bg-black px-5 py-3 text-sm font-semibold tracking-tight text-white shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.97]"
                     >
                         <Plus size={16} />
-                        Nuevo servicio
+                        {t('Nuevo servicio')}{' '}
                     </Link>
                 </div>
 
@@ -58,7 +61,7 @@ export default function Services({ services }: Props) {
                                         </div>
                                         <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold tracking-tight text-black/60">
                                             <Clock size={11} />
-                                            {service.duration} min
+                                            {service.duration} {t('min')}{' '}
                                         </span>
                                     </div>
 
@@ -78,7 +81,7 @@ export default function Services({ services }: Props) {
 
                                 <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4">
                                     <span className="text-sm font-semibold tracking-tight text-black/50 transition-colors duration-200 group-hover:text-black">
-                                        Administrar
+                                        {t('Administrar')}{' '}
                                     </span>
                                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 transition-all duration-300 group-hover:bg-black group-hover:text-white">
                                         <ArrowUpRight
@@ -91,17 +94,18 @@ export default function Services({ services }: Props) {
                         ))}
                     </div>
                 ) : (
-                    <div className="mt-10 flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-gray-200 py-24 text-center">
+                    <Card className="mt-10 flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-gray-200 py-24 text-center">
                         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
                             <Scissors className="text-black/30" size={22} />
                         </div>
                         <div>
                             <p className="font-bold tracking-tight text-black">
-                                Aún no tienes servicios
+                                {t('Aún no tienes servicios')}{' '}
                             </p>
                             <p className="mt-1 text-sm text-black/45">
-                                Crea el primero para empezar a ofrecerlo a tus
-                                clientes
+                                {t(
+                                    'Crea el primero para empezar a ofrecerlo a tus clientes',
+                                )}{' '}
                             </p>
                         </div>
                         <Link
@@ -109,9 +113,9 @@ export default function Services({ services }: Props) {
                             className="mt-2 flex items-center gap-1.5 rounded-full bg-black px-5 py-3 text-sm font-semibold tracking-tight text-white shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.97]"
                         >
                             <Plus size={16} />
-                            Nuevo servicio
+                            {t('Nuevo servicio')}{' '}
                         </Link>
-                    </div>
+                    </Card>
                 )}
 
                 {/* Paginación */}

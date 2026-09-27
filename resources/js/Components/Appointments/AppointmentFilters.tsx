@@ -1,6 +1,8 @@
 import { router, useForm, usePage } from '@inertiajs/react';
 import { index as appointmentsIndex } from '@/actions/App/Http/Controllers/AppointmentsController';
 import { index as dashboardIndex } from '@/actions/App/Http/Controllers/DashboardController';
+import { NativeButton, NativeInput } from '@/Components/Watermelon';
+import { useTranslation } from '@/lib/i18n';
 
 export type AppointmentFilterValues = {
     period?: string;
@@ -11,6 +13,8 @@ export type AppointmentFilterValues = {
 };
 
 export default function AppointmentFilters() {
+    const { t } = useTranslation();
+
     const page = usePage();
     const filters = (page.props.filters ?? {}) as AppointmentFilterValues;
     const form = useForm({
@@ -38,19 +42,19 @@ export default function AppointmentFilters() {
 
     return (
         <section
-            aria-label="Filtrar citas"
+            aria-label={t('Filtrar citas')}
             className="mb-6 rounded-2xl border border-gray-200 bg-white p-5"
         >
             <div className="mb-4 flex flex-wrap gap-2">
                 {(
                     [
-                        ['', 'Todas'],
-                        ['today', 'Hoy'],
-                        ['week', 'Esta semana'],
-                        ['month', 'Este mes'],
+                        ['', t('Todas')],
+                        ['today', t('Hoy')],
+                        ['week', t('Esta semana')],
+                        ['month', t('Este mes')],
                     ] as const
                 ).map(([period, label]) => (
-                    <button
+                    <NativeButton
                         key={period}
                         type="button"
                         aria-pressed={
@@ -62,7 +66,7 @@ export default function AppointmentFilters() {
                         className="rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold aria-pressed:bg-black aria-pressed:text-white"
                     >
                         {label}
-                    </button>
+                    </NativeButton>
                 ))}
             </div>
             <form
@@ -74,10 +78,10 @@ export default function AppointmentFilters() {
             >
                 {(
                     [
-                        ['date_from', 'Desde el día', 'date'],
-                        ['date_to', 'Hasta el día', 'date'],
-                        ['time_from', 'Desde las', 'time'],
-                        ['time_to', 'Hasta las', 'time'],
+                        ['date_from', t('Desde el día'), 'date'],
+                        ['date_to', t('Hasta el día'), 'date'],
+                        ['time_from', t('Desde las'), 'time'],
+                        ['time_to', t('Hasta las'), 'time'],
                     ] as const
                 ).map(([name, label, type]) => (
                     <label
@@ -85,7 +89,7 @@ export default function AppointmentFilters() {
                         className="flex min-w-0 flex-col gap-1 text-sm font-medium"
                     >
                         {label}
-                        <input
+                        <NativeInput
                             type={type}
                             value={form.data[name]}
                             onChange={(event) =>
@@ -95,21 +99,22 @@ export default function AppointmentFilters() {
                         />
                         {form.errors[name] && (
                             <span role="alert" className="text-xs text-red-600">
-                                {form.errors[name]}
+                                {t(form.errors[name])}
                             </span>
                         )}
                     </label>
                 ))}
-                <button
+                <NativeButton
                     disabled={form.processing}
                     className="self-end rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
                 >
-                    Aplicar filtros
-                </button>
+                    {t('Aplicar filtros')}{' '}
+                </NativeButton>
             </form>
             <p className="mt-3 text-xs text-black/50">
-                Horario de la barbería. La semana va de lunes a domingo. Se
-                filtra por la fecha y hora reservadas.
+                {t(
+                    'Horario de la barbería. La semana va de lunes a domingo. Se filtra por la fecha y hora reservadas.',
+                )}{' '}
             </p>
         </section>
     );

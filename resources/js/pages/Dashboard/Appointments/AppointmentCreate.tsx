@@ -1,14 +1,10 @@
-import { Button } from '@heroui/react';
 import { router, useForm, usePoll } from '@inertiajs/react';
-import {
-    ChevronLeft,
-    ChevronRight,
-    Clock,
-    Loader2,
-    Scissors,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Gift, Scissors } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Button, NativeButton, Skeleton } from '@/Components/Watermelon';
+import WorkerSelection from '@/Components/WorkerSelection';
 import FormLayout from '@/Layouts/FormLayout';
+import { useTranslation } from '@/lib/i18n';
 import {
     cn,
     formatMoney,
@@ -18,30 +14,20 @@ import {
 } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { availability, store } from '@/routes/appointments';
-import type { BusinessHoursPayload, Service, User } from '@/types';
+import type {
+    BusinessHoursPayload,
+    Loyalty,
+    Service,
+    WorkerProfile,
+} from '@/types';
 
 type Props = {
     services: Service[];
-    workers: User[];
+    loyalty: Loyalty;
+    workers: WorkerProfile[];
     businessHours: BusinessHoursPayload;
     selection: { service: number | null; barber: number | null };
 };
-
-const DAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-const MONTH_LABELS = [
-    'Ene',
-    'Feb',
-    'Mar',
-    'Abr',
-    'May',
-    'Jun',
-    'Jul',
-    'Ago',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dic',
-];
 
 /** ¿Está abierta la barbería en esta fecha? Respeta overrides y horario semanal. */
 function isDateOpen(date: Date, businessHours: BusinessHoursPayload): boolean {
@@ -61,11 +47,14 @@ function isDateOpen(date: Date, businessHours: BusinessHoursPayload): boolean {
 
 export default function AppointmentCreate({
     services,
+    loyalty,
     workers,
     businessHours,
     selection,
 }: Props) {
-    usePoll(POLL_INTERVAL_MS, { only: ['businessHours'] });
+    const { t, intlLocale } = useTranslation();
+
+    usePoll(POLL_INTERVAL_MS, { only: ['businessHours', 'loyalty'] });
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [retry, setRetry] = useState(0);
@@ -185,13 +174,13 @@ export default function AppointmentCreate({
         })
             .then(async (response) => {
                 if (!response.ok) {
-                    throw new Error('Error al consultar disponibilidad');
+                    throw new Error(t('Error al consultar disponibilidad'));
                 }
 
                 const payload = await response.json();
 
                 if (!Array.isArray(payload.slots)) {
-                    throw new Error('Respuesta inválida');
+                    throw new Error(t('Respuesta inválida'));
                 }
 
                 if (!controller.signal.aborted) {
@@ -207,13 +196,15 @@ export default function AppointmentCreate({
                     setResult({
                         key: requestKey,
                         slots: [],
-                        error: 'No pudimos consultar las horas. Revisa tu conexión e inténtalo de nuevo.',
+                        error: t(
+                            'No pudimos consultar las horas. Revisa tu conexión e inténtalo de nuevo.',
+                        ),
                     });
                 }
             });
 
         return () => controller.abort();
-    }, [slotsUrl, requestKey]);
+    }, [slotsUrl, requestKey, t]);
 
     const goToStep = (next: 1 | 2 | 3) => {
         setStep(next);
@@ -259,7 +250,7 @@ export default function AppointmentCreate({
                 onClick={() => router.get(dashboard.url())}
                 className="mb-5 flex min-h-12 items-center justify-center gap-2 bg-black text-white"
             >
-                <ChevronLeft /> Dashboard
+                <ChevronLeft /> {t('Dashboard')}{' '}
             </Button>
 
             <div className="mx-auto w-full max-w-4xl pb-56 sm:pb-8">
@@ -268,56 +259,77 @@ export default function AppointmentCreate({
                     tabIndex={-1}
                     className="scroll-mt-6 text-3xl font-bold tracking-tight text-black outline-none md:text-5xl"
                 >
-                    Agendar cita
+                    {t('Agendar cita')}{' '}
                 </h1>
                 <p className="mt-2 text-base font-medium tracking-tight text-black/60">
-                    Paso {step} de 3 · {selectedServices.length}{' '}
-                    {selectedServices.length === 1 ? 'servicio' : 'servicios'} ·{' '}
-                    {formatMoney(totalPrice)} · {totalDuration} min
+                    {t('Paso')} {step} {t('de 3 ·')} {selectedServices.length}{' '}
+                    {selectedServices.length === 1
+                        ? t('servicio')
+                        : t('servicios')}{' '}
+                    · {formatMoney(totalPrice, intlLocale)} · {totalDuration}{' '}
+                    {t('min')}{' '}
                 </p>
+
+                {loyalty.rewards_available > 0 && (
+                    <div className="mt-5 flex items-start gap-3 rounded-2xl border border-neutral-200 bg-white p-4 text-sm">
+                        <Gift size={20} className="mt-0.5 shrink-0" />
+                        <div>
+                            <p className="font-semibold">
+                                {t(
+                                    'Tienes un corte o facial gratis disponible',
+                                )}{' '}
+                            </p>
+                            <p className="mt-1 leading-6 text-black/55">
+                                {t(
+                                    'Reserva el servicio que quieres. El premio se aplicará al terminar tu visita confirmada; los precios mostrados todavía no incluyen ese descuento.',
+                                )}{' '}
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {/* Indicador de pasos */}
                 <nav
-                    aria-label="Pasos para agendar"
+                    aria-label={t('Pasos para agendar')}
                     className="mt-6 grid grid-cols-3 gap-2"
                 >
-                    {(['Servicios', 'Barbero', 'Día y hora'] as const).map(
-                        (label, index) => {
-                            const stepNumber = (index + 1) as 1 | 2 | 3;
-                            const isActive = step === stepNumber;
-                            const isDone = step > stepNumber;
+                    {(
+                        [t('Servicios'), t('Barbero'), t('Día y hora')] as const
+                    ).map((label, index) => {
+                        const stepNumber = (index + 1) as 1 | 2 | 3;
+                        const isActive = step === stepNumber;
+                        const isDone = step > stepNumber;
 
-                            return (
-                                <button
-                                    key={label}
-                                    type="button"
-                                    aria-current={isActive ? 'step' : undefined}
-                                    onClick={() => goToStep(stepNumber)}
-                                    disabled={
-                                        processing ||
-                                        (stepNumber > 1 &&
-                                            (!canNextFrom1 ||
-                                                (stepNumber === 3 &&
-                                                    !data.worker_id)))
-                                    }
-                                    className={cn(
-                                        'flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-sm font-semibold transition-colors sm:flex-row sm:gap-2 sm:text-base',
-                                        isActive && 'bg-black text-white',
-                                        isDone &&
-                                            'bg-gray-100 text-black/60 hover:bg-gray-200',
-                                        !isActive &&
-                                            !isDone &&
-                                            'bg-gray-100 text-black/35',
-                                    )}
-                                >
-                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs">
-                                        {stepNumber}
-                                    </span>
-                                    {label}
-                                </button>
-                            );
-                        },
-                    )}
+                        return (
+                            <NativeButton
+                                key={label}
+                                type="button"
+                                aria-current={isActive ? 'step' : undefined}
+                                onClick={() => goToStep(stepNumber)}
+                                disabled={
+                                    processing ||
+                                    (stepNumber > 1 &&
+                                        (!canNextFrom1 ||
+                                            (stepNumber === 3 &&
+                                                !data.worker_id)))
+                                }
+                                className={cn(
+                                    'flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-sm font-semibold transition-colors sm:flex-row sm:gap-2 sm:text-base',
+                                    isActive && 'bg-black text-white',
+                                    isDone &&
+                                        'bg-gray-100 text-black/60 hover:bg-gray-200',
+                                    !isActive &&
+                                        !isDone &&
+                                        'bg-gray-100 text-black/35',
+                                )}
+                            >
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs">
+                                    {stepNumber}
+                                </span>
+                                {label}
+                            </NativeButton>
+                        );
+                    })}
                 </nav>
 
                 <form onSubmit={submit} className="mt-10">
@@ -331,7 +343,7 @@ export default function AppointmentCreate({
                                     );
 
                                     return (
-                                        <button
+                                        <NativeButton
                                             key={service.id}
                                             type="button"
                                             aria-pressed={selected}
@@ -371,19 +383,23 @@ export default function AppointmentCreate({
                                             <div className="flex items-center justify-between text-base">
                                                 <span className="flex items-center gap-1 text-black/50">
                                                     <Clock size={13} />
-                                                    {service.duration} min
+                                                    {service.duration}{' '}
+                                                    {t('min')}{' '}
                                                 </span>
                                                 <span className="font-extrabold tracking-tight text-black">
-                                                    {formatMoney(service.price)}
+                                                    {formatMoney(
+                                                        service.price,
+                                                        intlLocale,
+                                                    )}
                                                 </span>
                                             </div>
-                                        </button>
+                                        </NativeButton>
                                     );
                                 })}
                             </div>
                             {errors.services && (
                                 <p className="mt-4 text-sm font-medium text-red-600">
-                                    {errors.services}
+                                    {t(errors.services)}
                                 </p>
                             )}
                         </div>
@@ -394,7 +410,7 @@ export default function AppointmentCreate({
                         <div className="flex flex-col gap-8">
                             <div>
                                 <h2 className="text-xl font-bold text-black">
-                                    Elige el día
+                                    {t('Elige el día')}{' '}
                                 </h2>
                                 <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-7">
                                     {openDays.map((date) => {
@@ -403,13 +419,13 @@ export default function AppointmentCreate({
                                             date.toDateString();
 
                                         return (
-                                            <button
+                                            <NativeButton
                                                 key={date.toISOString()}
                                                 type="button"
                                                 onClick={() => pickDate(date)}
                                                 aria-pressed={selected}
                                                 aria-label={date.toLocaleDateString(
-                                                    'es-MX',
+                                                    intlLocale,
                                                     { dateStyle: 'full' },
                                                 )}
                                                 className={cn(
@@ -420,25 +436,27 @@ export default function AppointmentCreate({
                                                 )}
                                             >
                                                 <span className="text-sm font-medium opacity-75">
-                                                    {DAY_LABELS[date.getDay()]}
+                                                    {date.toLocaleDateString(
+                                                        intlLocale,
+                                                        { weekday: 'short' },
+                                                    )}
                                                 </span>
                                                 <span className="text-2xl font-extrabold tracking-tight">
                                                     {date.getDate()}
                                                 </span>
                                                 <span className="text-sm font-medium opacity-75">
-                                                    {
-                                                        MONTH_LABELS[
-                                                            date.getMonth()
-                                                        ]
-                                                    }
+                                                    {date.toLocaleDateString(
+                                                        intlLocale,
+                                                        { month: 'short' },
+                                                    )}
                                                 </span>
-                                            </button>
+                                            </NativeButton>
                                         );
                                     })}
                                 </div>
                                 {errors.date && (
                                     <p className="mt-3 text-sm font-medium text-red-600">
-                                        {errors.date}
+                                        {t(errors.date)}
                                     </p>
                                 )}
                             </div>
@@ -446,53 +464,62 @@ export default function AppointmentCreate({
                             <div aria-live="polite" aria-busy={loadingSlots}>
                                 <h2 className="flex items-center gap-2 text-xl font-bold text-black">
                                     <Clock size={13} />
-                                    Hora disponible
+                                    {t('Hora disponible')}{' '}
                                 </h2>
                                 {selectedOverride?.open_time &&
                                     selectedOverride.close_time &&
                                     !selectedOverride.is_closed && (
                                         <p className="mt-2 text-base text-black/65">
-                                            Horario especial:{' '}
+                                            {t('Horario especial:')}{' '}
                                             {formatSlotTime(
                                                 selectedOverride.open_time,
                                             )}{' '}
-                                            a{' '}
+                                            {t('a')}{' '}
                                             {formatSlotTime(
                                                 selectedOverride.close_time,
                                             )}
-                                            . Tu cita dura {totalDuration}{' '}
-                                            minutos.
+                                            {t('. Tu cita dura')}{' '}
+                                            {totalDuration} {t('minutos.')}{' '}
                                         </p>
                                     )}
 
                                 {loadingSlots ? (
-                                    <div className="mt-3 flex items-center gap-2 text-sm text-black/50">
-                                        <Loader2
-                                            size={16}
-                                            className="animate-spin"
-                                        />
-                                        Consultando disponibilidad…
+                                    <div className="mt-3 space-y-3 text-sm text-black/50">
+                                        <p>
+                                            {t('Consultando disponibilidad…')}
+                                        </p>
+                                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                                            {Array.from(
+                                                { length: 8 },
+                                                (_, index) => (
+                                                    <Skeleton
+                                                        key={index}
+                                                        className="h-12"
+                                                    />
+                                                ),
+                                            )}
+                                        </div>
                                     </div>
                                 ) : slotError ? (
                                     <div
                                         role="alert"
                                         className="mt-3 rounded-2xl bg-amber-50 p-4 text-base"
                                     >
-                                        <p>{slotError}</p>
-                                        <button
+                                        <p>{t(slotError)}</p>
+                                        <NativeButton
                                             type="button"
                                             onClick={() =>
                                                 setRetry((value) => value + 1)
                                             }
                                             className="mt-2 min-h-12 font-bold underline"
                                         >
-                                            Volver a intentar
-                                        </button>
+                                            {t('Volver a intentar')}{' '}
+                                        </NativeButton>
                                     </div>
                                 ) : slots.length > 0 ? (
                                     <div className="mt-3 grid grid-cols-2 gap-3 min-[380px]:grid-cols-3 sm:grid-cols-4">
                                         {slots.map((slot) => (
-                                            <button
+                                            <NativeButton
                                                 key={slot}
                                                 type="button"
                                                 aria-pressed={
@@ -513,19 +540,22 @@ export default function AppointmentCreate({
                                                 )}
                                             >
                                                 {formatSlotTime(slot)}
-                                            </button>
+                                            </NativeButton>
                                         ))}
                                     </div>
                                 ) : (
                                     <p className="mt-3 rounded-2xl bg-gray-100 p-4 text-base text-black/65">
                                         {selectedDate
-                                            ? `No quedan horas para ${totalDuration} minutos con este barbero. Prueba otro día o cambia de barbero.`
-                                            : 'Elige primero un día.'}
+                                            ? t(
+                                                  'No quedan horas para {minutes} minutos con este barbero. Prueba otro día o cambia de barbero.',
+                                                  { minutes: totalDuration },
+                                              )
+                                            : t('Elige primero un día.')}
                                     </p>
                                 )}
                                 {errors.time && (
                                     <p className="mt-3 text-sm font-medium text-red-600">
-                                        {errors.time}
+                                        {t(errors.time)}
                                     </p>
                                 )}
                                 {data.time &&
@@ -535,8 +565,9 @@ export default function AppointmentCreate({
                                             role="alert"
                                             className="mt-3 text-base text-amber-800"
                                         >
-                                            La hora elegida ya no está
-                                            disponible. Selecciona otra.
+                                            {t(
+                                                'La hora elegida ya no está disponible. Selecciona otra.',
+                                            )}{' '}
                                         </p>
                                     )}
                             </div>
@@ -546,56 +577,17 @@ export default function AppointmentCreate({
                     {/* Paso 3: barbero */}
                     {step === 2 && (
                         <div>
-                            <h2 className="text-xl font-bold text-black">
-                                Elige tu barbero
-                            </h2>
-                            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                {workers.map((worker) => {
-                                    const selected =
-                                        data.worker_id === worker.id;
-
-                                    return (
-                                        <button
-                                            key={worker.id}
-                                            type="button"
-                                            aria-pressed={selected}
-                                            onClick={() =>
-                                                pickWorker(worker.id)
-                                            }
-                                            className={cn(
-                                                'flex items-center gap-3 rounded-2xl border bg-white p-5 text-left transition-all duration-200',
-                                                selected
-                                                    ? 'border-black shadow-md'
-                                                    : 'border-gray-200 hover:border-black/40',
-                                            )}
-                                        >
-                                            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black text-sm font-bold text-white">
-                                                {worker.name
-                                                    .charAt(0)
-                                                    .toUpperCase()}
-                                            </span>
-                                            <span>
-                                                <span className="block font-bold tracking-tight text-black">
-                                                    {worker.name}
-                                                </span>
-                                            </span>
-                                            <span
-                                                className={cn(
-                                                    'ml-auto flex h-5 w-5 items-center justify-center rounded-full border text-xs text-white',
-                                                    selected
-                                                        ? 'border-black bg-black'
-                                                        : 'border-gray-300 bg-white text-transparent',
-                                                )}
-                                            >
-                                                ✓
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
+                            <WorkerSelection
+                                workers={workers}
+                                selectedId={data.worker_id}
+                                onSelect={pickWorker}
+                            />
                             {errors.worker_id && (
-                                <p className="mt-4 text-sm font-medium text-red-600">
-                                    {errors.worker_id}
+                                <p
+                                    role="alert"
+                                    className="mt-4 text-sm font-medium text-red-600"
+                                >
+                                    {t(errors.worker_id)}
                                 </p>
                             )}
                         </div>
@@ -612,7 +604,10 @@ export default function AppointmentCreate({
                                             .join(' + ')}{' '}
                                         ·{' '}
                                         <strong className="text-black">
-                                            {formatMoney(totalPrice)}
+                                            {formatMoney(
+                                                totalPrice,
+                                                intlLocale,
+                                            )}
                                         </strong>
                                     </p>
                                 )}
@@ -620,7 +615,7 @@ export default function AppointmentCreate({
                                     {data.date && (
                                         <>
                                             {selectedDate?.toLocaleDateString(
-                                                'es-MX',
+                                                intlLocale,
                                                 {
                                                     day: '2-digit',
                                                     month: 'short',
@@ -654,7 +649,7 @@ export default function AppointmentCreate({
 
                             <div className="flex items-center gap-3">
                                 {step > 1 && (
-                                    <button
+                                    <NativeButton
                                         type="button"
                                         onClick={() =>
                                             goToStep((step - 1) as 1 | 2 | 3)
@@ -663,12 +658,12 @@ export default function AppointmentCreate({
                                         className="flex min-h-14 items-center justify-center gap-1 rounded-xl border border-gray-300 px-4 text-base font-semibold text-black"
                                     >
                                         <ChevronLeft size={15} />
-                                        Atrás
-                                    </button>
+                                        {t('Atrás')}{' '}
+                                    </NativeButton>
                                 )}
 
                                 {step < 3 && (
-                                    <button
+                                    <NativeButton
                                         type="button"
                                         disabled={
                                             step === 1
@@ -683,22 +678,22 @@ export default function AppointmentCreate({
                                         className="flex min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-black px-4 text-base font-bold text-white disabled:opacity-40"
                                     >
                                         {step === 1
-                                            ? 'Elegir barbero'
-                                            : 'Elegir día y hora'}
+                                            ? t('Elegir barbero')
+                                            : t('Elegir día y hora')}
                                         <ChevronRight size={15} />
-                                    </button>
+                                    </NativeButton>
                                 )}
 
                                 {step === 3 && (
-                                    <button
+                                    <NativeButton
                                         type="submit"
                                         disabled={processing || !canSubmit}
                                         className="flex min-h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-black px-4 text-base font-bold text-white disabled:opacity-40"
                                     >
                                         {processing
-                                            ? 'Agendando…'
-                                            : 'Agendar cita'}
-                                    </button>
+                                            ? t('Agendando…')
+                                            : t('Agendar cita')}
+                                    </NativeButton>
                                 )}
                             </div>
                         </div>

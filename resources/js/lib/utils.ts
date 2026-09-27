@@ -1,6 +1,7 @@
 import type { ClassValue } from 'clsx';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { getIntlLocale } from './i18n';
 
 /** Intervalo de auto-actualización de notificaciones y citas (15 s). */
 export const POLL_INTERVAL_MS = 15_000;
@@ -10,10 +11,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /** Da formato de moneda MXN a un número o string decimal. */
-export function formatMoney(value: number | string): string {
+export function formatMoney(
+    value: number | string,
+    locale = getIntlLocale(),
+): string {
     const number = Number(value);
 
-    return new Intl.NumberFormat('es-MX', {
+    return new Intl.NumberFormat(locale, {
         style: 'currency',
         currency: 'MXN',
         minimumFractionDigits: 2,
@@ -21,10 +25,13 @@ export function formatMoney(value: number | string): string {
 }
 
 /** Da formato de fecha corta (d/m/Y) a una fecha ISO. */
-export function formatDate(value: string | Date): string {
+export function formatDate(
+    value: string | Date,
+    locale = getIntlLocale(),
+): string {
     const date = new Date(value);
 
-    return new Intl.DateTimeFormat('es-MX', {
+    return new Intl.DateTimeFormat(locale, {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',

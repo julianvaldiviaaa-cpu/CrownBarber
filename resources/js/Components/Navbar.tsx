@@ -1,4 +1,4 @@
-import { Avatar, Button, Dropdown } from '@heroui/react';
+import { Avatar, Dropdown } from '@heroui/react';
 import { Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowRight,
@@ -14,7 +14,11 @@ import {
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { route } from 'ziggy-js';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import NotificationsBell from '@/Components/Notifications/NotificationsBell';
+import { Button, NativeButton } from '@/Components/Watermelon';
+import type { Translator } from '@/lib/i18n';
+import { useTranslation } from '@/lib/i18n';
 import {
     home,
     dashboard,
@@ -34,14 +38,16 @@ type Props = {
     navbar: 'dashboard' | 'guest';
 };
 
-const guestLinks = [
-    { label: 'Inicio', href: home.url() },
-    { label: 'Servicios', href: publicServices.url() },
-    { label: 'Barberos', href: barbers.url() },
-    { label: 'Cómo funciona', href: experience.url() },
+const guestLinks = (t: Translator) => [
+    { label: t('Inicio'), href: home.url() },
+    { label: t('Servicios'), href: publicServices.url() },
+    { label: t('Barberos'), href: barbers.url() },
+    { label: t('Cómo funciona'), href: experience.url() },
 ];
 
 export default function Navbar({ navbar }: Props) {
+    const { t } = useTranslation();
+
     const { auth } = usePage().props;
     const user = auth?.user;
     const InitialLetterName = user?.name?.charAt(0).toUpperCase();
@@ -84,16 +90,18 @@ export default function Navbar({ navbar }: Props) {
                     {user?.role !== 'user' && user && (
                         <span className="block text-xs font-medium text-black/50 sm:inline sm:pl-2">
                             {user.role === 'admin'
-                                ? 'Administrador'
-                                : 'Trabajador'}
+                                ? t('Administrador')
+                                : t('Trabajador')}
                         </span>
                     )}
                 </Link>
 
+                <LanguageSwitcher />
+
                 {/* Links de escritorio */}
                 {navbar === 'guest' && (
                     <div className="hidden items-center gap-8 md:flex">
-                        {guestLinks.map((link) => (
+                        {guestLinks(t).map((link) => (
                             <NavLink key={link.label} href={link.href}>
                                 {link.label}
                             </NavLink>
@@ -103,7 +111,7 @@ export default function Navbar({ navbar }: Props) {
                             className="group relative overflow-hidden border-2 border-black px-5 py-2 text-sm font-semibold tracking-tight text-black transition-transform duration-150 active:scale-[0.97]"
                         >
                             <span className="relative z-10 transition-colors duration-300 group-hover:text-white">
-                                Agendar Cita
+                                {t('Agendar Cita')}{' '}
                             </span>
                             <div className="absolute inset-0 origin-left scale-x-0 bg-black transition-transform duration-300 group-hover:scale-x-100" />
                         </Link>
@@ -124,7 +132,7 @@ export default function Navbar({ navbar }: Props) {
                                         className="bg-black px-6 text-gray-300"
                                     >
                                         <UserRound />
-                                        Nuevo Empleado
+                                        {t('Nuevo Empleado')}{' '}
                                     </Button>
                                     <Button
                                         onClick={() =>
@@ -133,7 +141,7 @@ export default function Navbar({ navbar }: Props) {
                                         className="bg-black px-6 text-gray-300"
                                     >
                                         <Briefcase />
-                                        Nuevo Servicio
+                                        {t('Nuevo Servicio')}{' '}
                                     </Button>
                                 </>
                             )}
@@ -144,17 +152,23 @@ export default function Navbar({ navbar }: Props) {
                                     }
                                     className="bg-black px-6 text-gray-300"
                                 >
-                                    <Plus /> Nueva Cita
+                                    <Plus /> {t('Nueva Cita')}{' '}
                                 </Button>
                             )}
                             <NotificationsBell />
                             <Dropdown>
                                 <Dropdown.Trigger>
-                                    <Avatar>
-                                        <Avatar.Fallback className="text-xl font-bold">
-                                            {InitialLetterName}
-                                        </Avatar.Fallback>
-                                    </Avatar>
+                                    <Button
+                                        isIconOnly
+                                        aria-label={t('Abrir menú de cuenta')}
+                                        className="rounded-full bg-transparent p-0"
+                                    >
+                                        <Avatar>
+                                            <Avatar.Fallback className="text-xl font-bold">
+                                                {InitialLetterName}
+                                            </Avatar.Fallback>
+                                        </Avatar>
+                                    </Button>
                                 </Dropdown.Trigger>
                                 <Dropdown.Popover>
                                     <Dropdown.Menu>
@@ -177,7 +191,7 @@ export default function Navbar({ navbar }: Props) {
                                             >
                                                 <Plus size={20} />
                                                 <p className="text-lg tracking-tighter">
-                                                    Nueva Cita
+                                                    {t('Nueva Cita')}{' '}
                                                 </p>
                                             </Dropdown.Item>
                                         )}
@@ -189,7 +203,7 @@ export default function Navbar({ navbar }: Props) {
                                         >
                                             <UserRound size={20} />
                                             <p className="text-lg tracking-tighter">
-                                                Mi Cuenta
+                                                {t('Mi Cuenta')}{' '}
                                             </p>
                                         </Dropdown.Item>
                                         <Dropdown.Item
@@ -202,7 +216,7 @@ export default function Navbar({ navbar }: Props) {
                                         >
                                             <CalendarDays size={20} />
                                             <p className="text-lg tracking-tighter">
-                                                Mis Citas
+                                                {t('Mis Citas')}{' '}
                                             </p>
                                         </Dropdown.Item>
                                         <Dropdown.Item
@@ -213,7 +227,7 @@ export default function Navbar({ navbar }: Props) {
                                         >
                                             <LogOut size={20} />
                                             <p className="text-lg tracking-tighter">
-                                                Cerrar Sesion
+                                                {t('Cerrar Sesion')}{' '}
                                             </p>
                                         </Dropdown.Item>
                                     </Dropdown.Menu>
@@ -227,13 +241,13 @@ export default function Navbar({ navbar }: Props) {
                                 className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold tracking-tight text-black/70 transition-colors duration-150 hover:text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black active:scale-[0.97]"
                             >
                                 <LogIn size={16} />
-                                Iniciar Sesión
+                                {t('Iniciar Sesión')}{' '}
                             </Link>
                             <Link
                                 href={route('register')}
                                 className="group relative flex items-center gap-1.5 bg-black px-4 py-2 text-sm font-semibold tracking-tight text-white transition-transform duration-150 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black active:scale-[0.97]"
                             >
-                                Crear Cuenta
+                                {t('Crear Cuenta')}{' '}
                                 <ArrowRight
                                     size={16}
                                     className="transition-transform duration-300 group-hover:translate-x-0.5"
@@ -249,22 +263,22 @@ export default function Navbar({ navbar }: Props) {
                         <NotificationsBell />
                     </div>
                 )}
-                <button
+                <NativeButton
                     type="button"
                     onClick={() => setMobileOpen((v) => !v)}
                     className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-black md:hidden"
-                    aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+                    aria-label={mobileOpen ? t('Cerrar menú') : t('Abrir menú')}
                     aria-expanded={mobileOpen}
                 >
                     {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
+                </NativeButton>
             </div>
 
             {/* Panel mobile */}
             {mobileOpen && (
                 <div className="absolute inset-x-0 top-full max-h-[calc(100dvh-80px)] overflow-y-auto overscroll-contain border-t border-black/10 bg-white px-4 py-4 shadow-lg md:hidden">
                     {navbar === 'guest' &&
-                        guestLinks.map((link) => (
+                        guestLinks(t).map((link) => (
                             <Link
                                 key={link.label}
                                 href={link.href}
@@ -281,7 +295,7 @@ export default function Navbar({ navbar }: Props) {
                             onClick={() => setMobileOpen(false)}
                             className="mt-2 border-2 border-black px-5 py-3 text-center text-base font-semibold tracking-tight text-black active:scale-[0.97]"
                         >
-                            Agendar Cita
+                            {t('Agendar Cita')}{' '}
                         </Link>
                     )}
 
@@ -289,15 +303,15 @@ export default function Navbar({ navbar }: Props) {
                         {user ? (
                             <>
                                 {[
-                                    { label: 'Mi panel', href: dashboard() },
+                                    { label: t('Mi panel'), href: dashboard() },
                                     {
-                                        label: 'Mis citas',
+                                        label: t('Mis citas'),
                                         href: appointments(),
                                     },
                                     ...(user.role === 'user'
                                         ? [
                                               {
-                                                  label: 'Agendar cita',
+                                                  label: t('Agendar cita'),
                                                   href: createAppointment(),
                                               },
                                           ]
@@ -305,12 +319,14 @@ export default function Navbar({ navbar }: Props) {
                                     ...(user.role === 'admin'
                                         ? [
                                               {
-                                                  label: 'Horarios de apertura',
+                                                  label: t(
+                                                      'Horarios de apertura',
+                                                  ),
                                                   href: businessHours(),
                                               },
                                           ]
                                         : []),
-                                    { label: 'Mi perfil', href: profile() },
+                                    { label: t('Mi perfil'), href: profile() },
                                 ].map((item) => (
                                     <Link
                                         key={item.label}
@@ -327,7 +343,8 @@ export default function Navbar({ navbar }: Props) {
                                     onClick={() => setMobileOpen(false)}
                                     className="flex min-h-14 items-center gap-3 px-4 text-base font-semibold text-red-700"
                                 >
-                                    <LogOut size={20} /> Cerrar sesión
+                                    <LogOut size={20} />{' '}
+                                    {t('Cerrar sesión')}{' '}
                                 </Link>
                             </>
                         ) : (
@@ -338,15 +355,14 @@ export default function Navbar({ navbar }: Props) {
                                     className="flex items-center gap-2 py-2 text-base font-semibold tracking-tight text-black/70 active:opacity-60"
                                 >
                                     <LogIn size={18} />
-                                    Iniciar Sesión
+                                    {t('Iniciar Sesión')}{' '}
                                 </Link>
                                 <Link
                                     href={route('register')}
                                     onClick={() => setMobileOpen(false)}
                                     className="flex items-center justify-center gap-2 bg-black px-4 py-3 text-base font-semibold tracking-tight text-white active:scale-[0.97]"
                                 >
-                                    Crear Cuenta
-                                    <ArrowRight size={18} />
+                                    {t('Crear Cuenta')} <ArrowRight size={18} />
                                 </Link>
                             </>
                         )}

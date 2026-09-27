@@ -1,8 +1,6 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
-import Lenis from 'lenis';
-import 'lenis/dist/lenis.css';
 
 /** Owns the public page's scroll effects and restores the DOM on navigation. */
 export function createPublicMotion(root: HTMLElement): () => void {
@@ -14,17 +12,6 @@ export function createPublicMotion(root: HTMLElement): () => void {
     media.add(
         '(prefers-reduced-motion: no-preference)',
         () => {
-            const lenis = new Lenis({
-                lerp: 0.085,
-                smoothWheel: true,
-                syncTouch: false,
-                anchors: { offset: -100 },
-                prevent: (node) => node.hasAttribute('data-lenis-prevent'),
-            });
-            const tick = (time: number) => lenis.raf(time * 1000);
-            lenis.on('scroll', ScrollTrigger.update);
-            gsap.ticker.add(tick);
-
             const splits: SplitText[] = [];
 
             root.querySelectorAll<HTMLElement>('[data-split-intro]').forEach(
@@ -206,21 +193,7 @@ export function createPublicMotion(root: HTMLElement): () => void {
                 },
             );
 
-            const onAnchorFocus = (event: FocusEvent) => {
-                if (
-                    event.target instanceof HTMLElement &&
-                    event.target.matches(':focus-visible')
-                ) {
-                    lenis.scrollTo(window.scrollY, { immediate: true });
-                }
-            };
-            root.addEventListener('focusin', onAnchorFocus);
-
             return () => {
-                root.removeEventListener('focusin', onAnchorFocus);
-                gsap.ticker.remove(tick);
-                lenis.off('scroll', ScrollTrigger.update);
-                lenis.destroy();
                 splits.forEach((split) => split.revert());
             };
         },

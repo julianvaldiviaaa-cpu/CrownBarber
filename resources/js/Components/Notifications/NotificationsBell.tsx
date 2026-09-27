@@ -2,9 +2,13 @@ import { router, usePage } from '@inertiajs/react';
 import { Bell, BellRing, CheckCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { route } from 'ziggy-js';
+import { NativeButton } from '@/Components/Watermelon';
+import { useTranslation } from '@/lib/i18n';
 import type { NotificationItem } from '@/types';
 
 export default function NotificationsBell() {
+    const { t, intlLocale } = useTranslation();
+
     const { auth } = usePage().props;
     const notifications: NotificationItem[] = auth?.notifications ?? [];
     const unreadCount = auth?.unreadNotificationsCount ?? 0;
@@ -37,10 +41,10 @@ export default function NotificationsBell() {
 
     return (
         <div className="relative" ref={panelRef}>
-            <button
+            <NativeButton
                 type="button"
                 onClick={() => setOpen((v) => !v)}
-                aria-label="Notificaciones"
+                aria-label={t('Notificaciones')}
                 aria-expanded={open}
                 className="relative flex h-10 w-10 items-center justify-center rounded-full text-black/70 transition-colors duration-150 hover:bg-black/5 hover:text-black"
             >
@@ -50,35 +54,35 @@ export default function NotificationsBell() {
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
-            </button>
+            </NativeButton>
 
             {open && (
                 <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
                     <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
                         <p className="text-sm font-bold tracking-tight text-black">
-                            Notificaciones
+                            {t('Notificaciones')}{' '}
                         </p>
                         {unreadCount > 0 && (
-                            <button
+                            <NativeButton
                                 type="button"
                                 onClick={markAllRead}
                                 className="flex items-center gap-1 text-xs font-semibold text-black/50 transition-colors hover:text-black"
                             >
                                 <CheckCheck size={14} />
-                                Marcar leídas
-                            </button>
+                                {t('Marcar leídas')}{' '}
+                            </NativeButton>
                         )}
                     </div>
 
                     <div className="max-h-80 overflow-y-auto">
                         {notifications.length === 0 && (
                             <p className="px-4 py-8 text-center text-sm text-black/40">
-                                No tienes notificaciones.
+                                {t('No tienes notificaciones.')}{' '}
                             </p>
                         )}
 
                         {notifications.map((notification) => (
-                            <button
+                            <NativeButton
                                 key={notification.id}
                                 type="button"
                                 onClick={() =>
@@ -97,7 +101,7 @@ export default function NotificationsBell() {
                                 />
                                 <span className="min-w-0">
                                     <span className="block text-sm font-medium tracking-tight text-black">
-                                        {notification.data.message}
+                                        {t(notification.data.message)}
                                     </span>
                                     {notification.data.client_name && (
                                         <span className="mt-1 block text-xs text-black/60">
@@ -111,18 +115,18 @@ export default function NotificationsBell() {
                                                 ', ',
                                             )}{' '}
                                             · ${notification.data.total_price}{' '}
-                                            MXN ·{' '}
+                                            {t('MXN ·')}{' '}
                                             {notification.data.total_duration}{' '}
-                                            min
+                                            {t('min')}{' '}
                                         </span>
                                     )}
                                     <span className="mt-0.5 block text-xs text-black/40">
                                         {new Date(
                                             notification.created_at,
-                                        ).toLocaleString('es-MX')}
+                                        ).toLocaleString(intlLocale)}
                                     </span>
                                 </span>
-                            </button>
+                            </NativeButton>
                         ))}
                     </div>
                 </div>

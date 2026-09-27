@@ -2,13 +2,16 @@ import { Link, usePage } from '@inertiajs/react';
 import { ArrowUpRight, Crown, Menu, X } from 'lucide-react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+import LanguageSwitcher from '@/Components/LanguageSwitcher';
 import NotificationRuntime from '@/Components/Notifications/NotificationRuntime';
-import { home, login, dashboard } from '@/routes';
+import type { Translator } from '@/lib/i18n';
+import { useTranslation } from '@/lib/i18n';
+import { home, login, dashboard, register } from '@/routes';
 import { create } from '@/routes/appointments';
 import { services, barbers, experience } from '@/routes/public';
 
 export function BookingLink({
-    children = 'Reservar cita',
+    children,
     className = 'crown-button',
     query,
 }: {
@@ -16,6 +19,8 @@ export function BookingLink({
     className?: string;
     query?: { service?: number; barber?: number };
 }) {
+    const { t } = useTranslation();
+
     const { auth } = usePage().props;
     const isStaff = auth?.user && auth.user.role !== 'user';
 
@@ -24,20 +29,23 @@ export function BookingLink({
             href={isStaff ? dashboard() : create({ query })}
             className={className}
         >
-            {isStaff ? 'Ir a mi panel' : children}
+            {isStaff ? t('Ir a mi panel') : (children ?? t('Reservar cita'))}
             <ArrowUpRight size={18} aria-hidden="true" />
         </Link>
     );
 }
 
-const navigation = [
-    { label: 'Inicio', route: home },
-    { label: 'Servicios', route: services },
-    { label: 'Barberos', route: barbers },
-    { label: 'Cómo funciona', route: experience },
+const navigation = (t: Translator) => [
+    { label: t('Inicio'), route: home },
+    { label: t('Servicios'), route: services },
+    { label: t('Barberos'), route: barbers },
+    { label: t('Cómo funciona'), route: experience },
+    { label: t('Crear Cuenta'), route: register },
 ];
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
+    const { t, language } = useTranslation();
+
     const {
         url,
         props: { auth },
@@ -50,6 +58,12 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
         const root = site.current;
         let cancelled = false;
         let dispose: (() => void) | undefined;
+        const resetMotion = () => {
+            cancelled = true;
+            dispose?.();
+            dispose = undefined;
+        };
+        window.addEventListener('crown:before-language-change', resetMotion);
 
         void import('@/lib/public-motion').then(({ createPublicMotion }) => {
             if (!cancelled && root) {
@@ -58,16 +72,19 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
         });
 
         return () => {
-            cancelled = true;
-            dispose?.();
+            window.removeEventListener(
+                'crown:before-language-change',
+                resetMotion,
+            );
+            resetMotion();
         };
-    }, [url]);
+    }, [url, language]);
 
     return (
-        <div ref={site} className="crown-site" lang="es">
+        <div ref={site} className="crown-site" lang={language}>
             <div className="crown-scroll-progress" aria-hidden="true" />
             <a href="#contenido" className="crown-skip">
-                Saltar al contenido
+                {t('Saltar al contenido')}{' '}
             </a>
             <header
                 className="crown-header crown-container"
@@ -80,7 +97,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             >
                 <Link
                     href={home()}
-                    aria-label="Crown Barber, inicio"
+                    aria-label={t('Crown Barber, inicio')}
                     className="crown-logo"
                 >
                     <Crown strokeWidth={1.7} size={30} aria-hidden="true" />
@@ -89,10 +106,10 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
                     </span>
                 </Link>
                 <nav
-                    aria-label="Navegación principal"
-                    className="hidden items-center gap-8 lg:flex"
+                    aria-label={t('Navegación principal')}
+                    className="hidden items-center gap-5 xl:flex"
                 >
-                    {navigation.map(({ label, route }) => (
+                    {navigation(t).map(({ label, route }) => (
                         <Link
                             key={label}
                             href={route()}
@@ -108,12 +125,13 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
                         </Link>
                     ))}
                 </nav>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <LanguageSwitcher />
                     <Link
                         href={auth?.user ? dashboard() : login()}
                         className="crown-nav-link hidden sm:block"
                     >
-                        {auth?.user ? 'Mi cuenta' : 'Iniciar sesión'}
+                        {auth?.user ? t('Mi cuenta') : t('Iniciar sesión')}
                     </Link>
                     <span className="hidden sm:block">
                         <BookingLink />
@@ -121,11 +139,13 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
                     <button
                         ref={menuButton}
                         type="button"
-                        className="crown-menu-button lg:hidden"
+                        className="crown-menu-button xl:hidden"
                         onClick={() => setMenuOpen(!menuOpen)}
                         aria-expanded={menuOpen}
                         aria-controls="mobile-navigation"
-                        aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+                        aria-label={
+                            menuOpen ? t('Cerrar menú') : t('Abrir menú')
+                        }
                     >
                         {menuOpen ? <X /> : <Menu />}
                     </button>
@@ -134,10 +154,10 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
                     <nav
                         id="mobile-navigation"
                         data-lenis-prevent
-                        aria-label="Navegación móvil"
-                        className="crown-mobile-nav lg:hidden"
+                        aria-label={t('Navegación móvil')}
+                        className="crown-mobile-nav xl:hidden"
                     >
-                        {navigation.map(({ label, route }) => (
+                        {navigation(t).map(({ label, route }) => (
                             <Link
                                 key={label}
                                 href={route()}
@@ -153,7 +173,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
                             </Link>
                         ))}
                         <Link href={auth?.user ? dashboard() : login()}>
-                            {auth?.user ? 'Mi cuenta' : 'Iniciar sesión'}
+                            {auth?.user ? t('Mi cuenta') : t('Iniciar sesión')}
                         </Link>
                         <BookingLink />
                     </nav>
@@ -168,10 +188,10 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
                     <div className="flex flex-col justify-between gap-8 border-b border-white/20 pb-12 md:flex-row md:items-end">
                         <div>
                             <p className="crown-eyebrow">
-                                TU PRÓXIMO BUEN DÍA EMPIEZA AQUÍ
+                                {t('TU PRÓXIMO BUEN DÍA EMPIEZA AQUÍ')}{' '}
                             </p>
                             <h2 className="crown-display mt-5 text-5xl md:text-7xl">
-                                Hazlo tuyo.
+                                {t('Hazlo tuyo.')}{' '}
                             </h2>
                         </div>
                         <BookingLink className="crown-button crown-button-light" />
@@ -184,21 +204,23 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
                             <Crown size={22} /> CROWN BARBER
                         </Link>
                         <nav
-                            aria-label="Navegación del pie de página"
+                            aria-label={t('Navegación del pie de página')}
                             className="flex flex-wrap gap-6"
                         >
-                            {navigation.slice(1).map(({ label, route }) => (
-                                <Link
-                                    className="crown-footer-link"
-                                    key={label}
-                                    href={route()}
-                                >
-                                    {label}
-                                </Link>
-                            ))}
+                            {navigation(t)
+                                .slice(1)
+                                .map(({ label, route }) => (
+                                    <Link
+                                        className="crown-footer-link"
+                                        key={label}
+                                        href={route()}
+                                    >
+                                        {label}
+                                    </Link>
+                                ))}
                         </nav>
                         <span className="text-white/60">
-                            Estilo propio. Siempre.
+                            {t('Estilo propio. Siempre.')}{' '}
                         </span>
                     </div>
                     <div className="crown-footer-wordmark" aria-hidden="true">
